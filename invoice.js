@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = '';
 
         if (transactions.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No transactions found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;">No transactions found.</td></tr>';
             return;
         }
 
@@ -44,11 +44,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     <br><small style="color: var(--text-secondary); font-size: 11px; font-weight: 400;">${tx.id}</small>
                 </td>
                 <td>${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                <td><span class="badge ${tx.type === 'in' ? 'badge-in' : 'badge-out'}">${tx.type.toUpperCase()}</span></td>
+                <td><span class="badge ${tx.type === 'in' ? 'badge-in' : (tx.type === 'out' ? 'badge-out' : 'badge-payment')}">${tx.type.toUpperCase().replace('-', ' ')}</span></td>
                 <td>${itemName}</td>
-                <td>${parseFloat(tx.totalAmount).toFixed(2)}</td>
-                <td>${parseFloat(tx.remainingAmount).toFixed(2)}</td>
                 <td>
+                    ${tx.paymentMethod || '-'}
+                    ${tx.bankName ? `<br><small style="color: var(--text-secondary); font-size: 11px;">${tx.bankName}</small>` : ''}
+                </td>
+                <td>${parseFloat(tx.totalAmount).toFixed(2)}</td>
+                <td>${parseFloat(tx.paidAmount || 0).toFixed(2)}</td>
+                <td>${parseFloat(tx.remainingAmount).toFixed(2)}</td>
+                <td data-html2canvas-ignore="true">
                     <button class="action-btn" title="Print Invoice (English)" onclick="printInvoice('${tx.id}', 'en')">
                         <i class='bx bx-printer'></i>
                     </button>
@@ -73,17 +78,70 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const searchInput = document.getElementById('admin-invoice-search');
+    const urlParams = new URLSearchParams(window.location.search);
+    const personFilter = urlParams.get('person');
+
+    if (personFilter && searchInput) {
+        searchInput.value = personFilter;
+    }
+
     // Initial render
     window.renderInvoicesTable();
 
     // Attach search event listener if on Admin Panel
-    const searchInput = document.getElementById('admin-invoice-search');
     if (searchInput) {
         searchInput.addEventListener('input', window.renderInvoicesTable);
     }
 
+    // Statement Download Logic
+    const btnDownloadStatement = document.getElementById('btn-download-statement');
+    if (btnDownloadStatement) {
+        btnDownloadStatement.addEventListener('click', async () => {
+            if (typeof html2canvas === 'undefined') {
+                alert("Image rendering library is not loaded.");
+                return;
+            }
+
+            const table = document.getElementById('invoices-table');
+            if (!table) return;
+
+            // Proceed directly to capture
+            const originalBg = table.style.backgroundColor;
+            const originalColor = table.style.color;
+            table.style.backgroundColor = getComputedStyle(document.body).getPropertyValue('--bg-main').trim() || '#0b0f19';
+            table.style.color = getComputedStyle(document.body).getPropertyValue('--text-primary').trim() || '#f8fafc';
+            
+            try {
+                const canvas = await html2canvas(table, { scale: 2, useCORS: true, backgroundColor: table.style.backgroundColor });
+
+                canvas.toBlob(blob => {
+                    if (!blob) return;
+                    let personName = searchInput ? searchInput.value.trim() : 'Statement';
+                    if (!personName) personName = 'All';
+
+                    const fileName = `Statement_${personName.replace(/[^a-z0-9]/gi, '_')}.png`;
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    table.style.backgroundColor = originalBg;
+                    table.style.color = originalColor;
+                });
+            } catch (err) {
+                console.error('Error generating statement image:', err);
+                table.style.backgroundColor = originalBg;
+                table.style.color = originalColor;
+            }
+        });
+    }
+
     // Auto-print if triggered from another page
-    const urlParams = new URLSearchParams(window.location.search);
     const printTxId = urlParams.get('print');
     if (printTxId) {
         // Clear the URL to prevent re-printing on manual refresh
@@ -128,10 +186,24 @@ function printInvoice(txId, lang = 'en', triggerPrint = true) {
         typeOut: lang === 'ur' ? "فروخت (Stock Out)" : "Stock Out (Sale)",
         mun: lang === 'ur' ? "من" : "Mun",
         kg: lang === 'ur' ? "کلو" : "Kg",
-        gram: lang === 'ur' ? "گرام" : "g",
+        gram: lang === 'ur' ? "گرام" : "Grams",
+        pound: lang === 'ur' ? "پاؤنڈ" : "Pound",
+        tola: lang === 'ur' ? "تولہ" : "Tola",
+        bag: lang === 'ur' ? "بوری" : "Bag",
+        bag50: lang === 'ur' ? "بوری 50kg" : "Bag 50kg",
+        bag34: lang === 'ur' ? "بوری 34kg" : "Bag 34kg",
         ltr: lang === 'ur' ? "لیٹر" : "L",
-        ml: lang === 'ur' ? "ملی لیٹر" : "ml"
+        ml: lang === 'ur' ? "ملی لیٹر" : "ml",
+        labelPaymentMethod: lang === 'ur' ? "ادائیگی کا طریقہ:" : "Payment Method:",
+        labelBankName: lang === 'ur' ? "بینک کا نام:" : "Bank Name:"
     };
+
+    // Dynamically set paid label based on type
+    if (tx.type === 'in' || tx.type === 'payment-out') {
+        t.labelPaid = lang === 'ur' ? "دی گئی رقم:" : "Amount Given:";
+    } else {
+        t.labelPaid = lang === 'ur' ? "وصول کی گئی رقم:" : "Amount Received:";
+    }
 
     // Populate Print Template
     document.getElementById('print-title').textContent = t.title;
@@ -140,7 +212,9 @@ function printInvoice(txId, lang = 'en', triggerPrint = true) {
     document.getElementById('invoice-date').textContent = t.date + new Date(tx.date).toLocaleString();
     document.getElementById('invoice-person').textContent = t.person + (tx.person || 'N/A');
     document.getElementById('label-type').textContent = t.labelType;
-    document.getElementById('invoice-type').textContent = tx.type.toUpperCase() === 'IN' ? t.typeIn : t.typeOut;
+    document.getElementById('invoice-type').textContent =
+        tx.type === 'in' ? t.typeIn :
+            (tx.type === 'out' ? t.typeOut : tx.type.toUpperCase().replace('-', ' '));
 
     document.getElementById('th-desc').textContent = t.thDesc;
     document.getElementById('th-weight').textContent = t.thWeight;
@@ -150,6 +224,11 @@ function printInvoice(txId, lang = 'en', triggerPrint = true) {
     document.getElementById('label-paid-print').textContent = t.labelPaid;
     document.getElementById('label-rem-print').textContent = t.labelRem;
     document.getElementById('print-footer').textContent = t.footer;
+
+    const lblPaymentMethod = document.getElementById('label-payment-method-print');
+    const lblBankName = document.getElementById('label-bank-name-print');
+    if (lblPaymentMethod) lblPaymentMethod.textContent = t.labelPaymentMethod;
+    if (lblBankName) lblBankName.textContent = t.labelBankName;
 
     // Apply RTL for Urdu
     const printArea = document.getElementById('print-area');
@@ -169,15 +248,20 @@ function printInvoice(txId, lang = 'en', triggerPrint = true) {
         let displayQty = item.qty !== undefined ? item.qty : parseFloat(item.totalKg || 0);
         let displayUnit = item.unit || 'kg';
         let weightStr = [];
-        
+
         let unitLabel = t.kg;
         if (displayUnit === 'mun') unitLabel = t.mun;
         else if (displayUnit === 'kg') unitLabel = t.kg;
         else if (displayUnit === 'gram') unitLabel = t.gram;
         else if (displayUnit === 'ltr') unitLabel = t.ltr;
         else if (displayUnit === 'ml') unitLabel = t.ml;
+        else if (displayUnit === 'pound') unitLabel = t.pound;
+        else if (displayUnit === 'tola') unitLabel = t.tola;
+        else if (displayUnit === 'bag') unitLabel = t.bag;
+        else if (displayUnit === 'bag50') unitLabel = t.bag50;
+        else if (displayUnit === 'bag34') unitLabel = t.bag34;
         else if (displayUnit === 'amount') unitLabel = lang === 'ur' ? 'تعداد' : 'Pcs';
-        
+
         if (item.qty !== undefined && item.unit) {
             weightStr.push(`${displayQty} ${unitLabel}`);
         } else if (item.weight) {
@@ -187,8 +271,11 @@ function printInvoice(txId, lang = 'en', triggerPrint = true) {
             if (item.weight.grams > 0) weightStr.push(`${item.weight.grams} ${t.gram}`);
             if (item.weight.ltr > 0) weightStr.push(`${item.weight.ltr} ${t.ltr}`);
             if (item.weight.ml > 0) weightStr.push(`${item.weight.ml} ${t.ml}`);
+            if (item.weight.bag > 0) weightStr.push(`${item.weight.bag} ${t.bag}`);
+            if (item.weight.bag50 > 0) weightStr.push(`${item.weight.bag50} ${t.bag50}`);
+            if (item.weight.bag34 > 0) weightStr.push(`${item.weight.bag34} ${t.bag34}`);
         }
-        
+
         if (weightStr.length === 0) weightStr.push(`${parseFloat(item.totalKg || 0).toFixed(3)} ${t.kg}`);
 
         let secondColHtml = '';
@@ -205,15 +292,32 @@ function printInvoice(txId, lang = 'en', triggerPrint = true) {
         tr.innerHTML = `
             <td>${item.itemName || 'Unknown Item'}</td>
             <td>${secondColHtml}</td>
-            <td>${parseFloat(item.ratePerKg || 0).toFixed(2)}</td>
+            <td>${parseFloat(item.ratePerUnit || item.ratePerKg || 0).toFixed(2)}</td>
             <td>${parseFloat(item.totalAmount || 0).toFixed(2)}</td>
         `;
         printBody.appendChild(tr);
     });
 
-    // If previousBalance exists, show it. Otherwise hide the rows.
-    const hasPrevBalance = tx.previousBalance !== undefined && tx.previousBalance !== 0;
-    
+    // Calculate previousBalance and grandTotal if they are missing (for older transactions)
+    let calcPrevBal = tx.previousBalance;
+    let calcGrandTotal = tx.grandTotal;
+    const itemsTotal = parseFloat(tx.totalAmount || 0);
+    const paid = parseFloat(tx.paidAmount || 0);
+    const rem = parseFloat(tx.remainingAmount || 0);
+
+    if (calcPrevBal === undefined) {
+        if (tx.type === 'in' || tx.type === 'payment-out') {
+            calcPrevBal = rem + itemsTotal - paid;
+            calcGrandTotal = calcPrevBal - itemsTotal;
+        } else {
+            calcPrevBal = rem - itemsTotal + paid;
+            calcGrandTotal = calcPrevBal + itemsTotal;
+        }
+    }
+
+    // Always show Previous Balance and Grand Total rows
+    const hasPrevBalance = true;
+
     const labelItemsTotal = document.getElementById('label-items-total-print');
     const labelPrevBal = document.getElementById('label-prev-bal-print');
     const labelGrandTotal = document.getElementById('label-grand-total-print');
@@ -222,22 +326,24 @@ function printInvoice(txId, lang = 'en', triggerPrint = true) {
     if (labelPrevBal) labelPrevBal.textContent = lang === 'ur' ? 'پچھلا بقایا:' : 'Previous Balance:';
     if (labelGrandTotal) labelGrandTotal.textContent = lang === 'ur' ? 'کل رقم (Grand Total):' : 'Grand Total:';
 
-    const itemsTotalVal = tx.totalAmount;
-    const prevBalVal = tx.previousBalance || 0;
-    const grandTotalVal = tx.grandTotal !== undefined ? tx.grandTotal : itemsTotalVal;
+    const itemsTotalVal = itemsTotal;
+    const prevBalVal = calcPrevBal || 0;
+    const grandTotalVal = calcGrandTotal !== undefined ? calcGrandTotal : itemsTotalVal;
 
     const rowPrevBal = document.getElementById('prev-balance-row');
     const rowGrandTotal = document.getElementById('grand-total-row');
+    const itemsTotalRow = document.getElementById('items-total-row');
 
     if (rowPrevBal && rowGrandTotal) {
-        if (hasPrevBalance) {
-            rowPrevBal.style.display = 'block';
-            rowGrandTotal.style.display = 'block';
-            if (labelItemsTotal) labelItemsTotal.textContent = lang === 'ur' ? 'آئٹمز کل رقم:' : 'Items Total:';
+        rowPrevBal.style.display = 'block';
+        rowGrandTotal.style.display = 'block';
+    }
+
+    if (itemsTotalRow) {
+        if (tx.type.startsWith('payment')) {
+            itemsTotalRow.style.display = 'none';
         } else {
-            rowPrevBal.style.display = 'none';
-            rowGrandTotal.style.display = 'none';
-            if (labelItemsTotal) labelItemsTotal.textContent = lang === 'ur' ? 'کل رقم:' : 'Total Amount:';
+            itemsTotalRow.style.display = 'block';
         }
     }
 
@@ -252,6 +358,25 @@ function printInvoice(txId, lang = 'en', triggerPrint = true) {
 
     document.getElementById('invoice-paid').textContent = parseFloat(tx.paidAmount).toFixed(2);
     document.getElementById('invoice-remaining').textContent = parseFloat(tx.remainingAmount).toFixed(2);
+
+    const paymentMethodRow = document.getElementById('payment-method-row');
+    const bankNameRowPrint = document.getElementById('bank-name-row-print');
+
+    if (tx.paymentMethod) {
+        const pmEl = document.getElementById('invoice-payment-method');
+        if (pmEl) pmEl.textContent = tx.paymentMethod;
+        if (paymentMethodRow) paymentMethodRow.style.display = 'block';
+    } else {
+        if (paymentMethodRow) paymentMethodRow.style.display = 'none';
+    }
+
+    if (tx.bankName) {
+        const bnEl = document.getElementById('invoice-bank-name');
+        if (bnEl) bnEl.textContent = tx.bankName;
+        if (bankNameRowPrint) bankNameRowPrint.style.display = 'block';
+    } else {
+        if (bankNameRowPrint) bankNameRowPrint.style.display = 'none';
+    }
 
     // Set document title to auto-populate PDF filename
     const originalTitle = document.title;
@@ -268,7 +393,7 @@ function printInvoice(txId, lang = 'en', triggerPrint = true) {
     }
 }
 
-window.editInvoice = function(txId) {
+window.editInvoice = function (txId) {
     const transactions = window.Store.getTransactions();
     const tx = transactions.find(t => t.id === txId);
     if (!tx) {
@@ -278,7 +403,7 @@ window.editInvoice = function(txId) {
 
     // Save editing state to session storage
     sessionStorage.setItem('editingTxId', txId);
-    
+
     // Redirect to Dashboard (index.html)
     window.location.href = 'index.html';
 };
@@ -307,12 +432,12 @@ window.shareWhatsApp = async function (txId) {
     }
 
     const lang = localStorage.getItem('lang') || 'en';
-    
+
     // Populate the print area
     printInvoice(txId, lang, false);
 
     const printArea = document.getElementById('print-area');
-    
+
     // Temporarily show the print area to capture it
     const originalDisplay = printArea.style.display;
     const originalPosition = printArea.style.position;
@@ -329,7 +454,7 @@ window.shareWhatsApp = async function (txId) {
     try {
         // Capture image
         const canvas = await html2canvas(printArea, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-        
+
         // Restore styles
         printArea.classList.add('print-only');
         printArea.style.display = originalDisplay;
@@ -338,7 +463,7 @@ window.shareWhatsApp = async function (txId) {
         printArea.style.zIndex = originalZIndex;
 
         // Convert to blob
-        canvas.toBlob(async function(blob) {
+        canvas.toBlob(async function (blob) {
             if (!blob) {
                 alert("Failed to generate image.");
                 return;
@@ -361,7 +486,7 @@ window.shareWhatsApp = async function (txId) {
                     console.log("Share failed or was cancelled:", err);
                 }
             }
-            
+
             // Fallback for Desktop or unsupported browsers
             // Download the image
             const url = URL.createObjectURL(blob);
@@ -418,17 +543,23 @@ window.copyInvoice = function (txId) {
     const lang = localStorage.getItem('lang') || 'en';
 
     let message = "";
-    
+
     const txItems = tx.items || [tx];
-    let itemsListUrdu = txItems.map((item, i) => `${i+1}. ${item.itemName} | ${parseFloat(item.totalKg).toFixed(3)} کلو | ریٹ: ${parseFloat(item.ratePerKg).toFixed(2)} | کل: ${parseFloat(item.totalAmount).toFixed(2)}`).join('\n');
-    let itemsListEn = txItems.map((item, i) => `${i+1}. ${item.itemName} | ${parseFloat(item.totalKg).toFixed(3)} Kg | Rate: ${parseFloat(item.ratePerKg).toFixed(2)} | Total: ${parseFloat(item.totalAmount).toFixed(2)}`).join('\n');
+    let itemsListUrdu = txItems.map((item, i) => `${i + 1}. ${item.itemName} | ${parseFloat(item.totalKg).toFixed(3)} کلو | ریٹ: ${parseFloat(item.ratePerUnit || item.ratePerKg || 0).toFixed(2)} | کل: ${parseFloat(item.totalAmount).toFixed(2)}`).join('\n');
+    let itemsListEn = txItems.map((item, i) => `${i + 1}. ${item.itemName} | ${parseFloat(item.totalKg).toFixed(3)} Kg | Rate: ${parseFloat(item.ratePerUnit || item.ratePerKg || 0).toFixed(2)} | Total: ${parseFloat(item.totalAmount).toFixed(2)}`).join('\n');
+
+    let paymentStrUrdu = tx.paymentMethod ? `\n*ادائیگی کا طریقہ:* ${tx.paymentMethod}` : '';
+    let bankStrUrdu = tx.bankName ? `\n*بینک کا نام:* ${tx.bankName}` : '';
+
+    let paymentStrEn = tx.paymentMethod ? `\n*Payment Method:* ${tx.paymentMethod}` : '';
+    let bankStrEn = tx.bankName ? `\n*Bank Name:* ${tx.bankName}` : '';
 
     if (lang === 'ur') {
         const typeStr = tx.type.toUpperCase() === 'IN' ? "خریداری (Stock In)" : "فروخت (Stock Out)";
-        message = `\u200E\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0بسم اللہ الرحمن الرحیم\n🏢 *منجانب: Wanda Material Invoice*\n-----------------------------------\n*بل / انوائس: ${tx.id}*\n*تاریخ:* ${dateStr}\n*نام:* ${tx.person || 'N/A'}\n*قسم:* ${typeStr}\n-----------------------------------\n*آئٹمز:*\n${itemsListUrdu}\n-----------------------------------\n*کل رقم:* ${parseFloat(tx.totalAmount).toFixed(2)}\n*ادا شدہ:* ${parseFloat(tx.paidAmount).toFixed(2)}\n*بقایا:* ${parseFloat(tx.remainingAmount).toFixed(2)}\n\n\u200E\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0جزاک اللہ`;
+        message = `\u200E\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0بسم اللہ الرحمن الرحیم\n🏢 *منجانب: Wanda Material Invoice*\n-----------------------------------\n*بل / انوائس: ${tx.id}*\n*تاریخ:* ${dateStr}\n*نام:* ${tx.person || 'N/A'}\n*قسم:* ${typeStr}\n-----------------------------------\n*آئٹمز:*\n${itemsListUrdu}\n-----------------------------------\n*کل رقم:* ${parseFloat(tx.totalAmount).toFixed(2)}\n*ادا شدہ:* ${parseFloat(tx.paidAmount).toFixed(2)}${paymentStrUrdu}${bankStrUrdu}\n*بقایا:* ${parseFloat(tx.remainingAmount).toFixed(2)}\n\n\u200E\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0جزاک اللہ`;
     } else {
         const typeStr = tx.type.toUpperCase() === 'IN' ? 'Stock In (Purchase)' : 'Stock Out (Sale)';
-        message = `\u200E\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0بسم اللہ الرحمن الرحیم\n🏢 *From: Wanda Material Invoice*\n-----------------------------------\n*INVOICE: ${tx.id}*\n*Date:* ${dateStr}\n*Name:* ${tx.person || 'N/A'}\n*Type:* ${typeStr}\n-----------------------------------\n*Items:*\n${itemsListEn}\n-----------------------------------\n*Total Amount:* ${parseFloat(tx.totalAmount).toFixed(2)}\n*Paid:* ${parseFloat(tx.paidAmount).toFixed(2)}\n*Remaining:* ${parseFloat(tx.remainingAmount).toFixed(2)}\n\n\u200E\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0جزاک اللہ`;
+        message = `\u200E\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0بسم اللہ الرحمن الرحیم\n🏢 *From: Wanda Material Invoice*\n-----------------------------------\n*INVOICE: ${tx.id}*\n*Date:* ${dateStr}\n*Name:* ${tx.person || 'N/A'}\n*Type:* ${typeStr}\n-----------------------------------\n*Items:*\n${itemsListEn}\n-----------------------------------\n*Total Amount:* ${parseFloat(tx.totalAmount).toFixed(2)}\n*Paid:* ${parseFloat(tx.paidAmount).toFixed(2)}${paymentStrEn}${bankStrEn}\n*Remaining:* ${parseFloat(tx.remainingAmount).toFixed(2)}\n\n\u200E\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0جزاک اللہ`;
     }
 
     if (navigator.clipboard && navigator.clipboard.writeText) {

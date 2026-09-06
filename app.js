@@ -24,11 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Language Logic
     const langToggleBtn = document.getElementById('lang-toggle');
     let currentLang = localStorage.getItem('lang') || 'en';
-    
+
     function applyTranslations(lang) {
         if (!window.Translations || !window.Translations[lang]) return;
         const dict = window.Translations[lang];
-        
+
         // Translate text contents
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
@@ -151,17 +151,38 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault(); // Prevent page scrolling
             const targetEl = focusableElements[nextIndex];
             targetEl.focus();
-            
+
             // Highlight all text so the cursor doesn't get stuck in the middle of the text
             if ((targetEl.tagName === 'INPUT' || targetEl.tagName === 'TEXTAREA') && typeof targetEl.select === 'function') {
                 try {
                     targetEl.select();
-                } catch(err) {
+                } catch (err) {
                     // Ignore for inputs that don't support selection
                 }
             }
         }
     });
+
+    // Global listener for date inputs to support DD/MM/YYYY display format
+    function updateDateDisplay(input) {
+        if (input.value) {
+            const parts = input.value.split('-');
+            if (parts.length === 3) {
+                input.setAttribute('data-date', `${parts[2]}/${parts[1]}/${parts[0]}`);
+            }
+        } else {
+            input.setAttribute('data-date', '');
+        }
+    }
+    
+    document.addEventListener('change', (e) => {
+        if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'date') {
+            updateDateDisplay(e.target);
+        }
+    });
+    
+    // Initialize any existing date inputs on load
+    document.querySelectorAll('input[type="date"]').forEach(updateDateDisplay);
 
     // Initialize Dashboard
     updateDashboard();
@@ -184,11 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentPath.startsWith('/')) {
                 currentPath = currentPath.substring(1);
             }
-            
+
             currentPath = decodeURI(currentPath); // Handle spaces in URL
             currentPath = currentPath.replace(/\//g, '\\');
             const sourceDir = currentPath.substring(0, currentPath.lastIndexOf('\\'));
-            
+
             const batContent = `@echo off
 echo Installing StockMaster App...
 set "SOURCE_DIR=${sourceDir}"
@@ -229,12 +250,12 @@ pause
             URL.revokeObjectURL(url);
         });
     }
-    
-    window.populatePaymentPersonSelect = function() {
+
+    window.populatePaymentPersonSelect = function () {
         const persons = window.Store.getPersons();
         const dataList = document.getElementById('payment-person-list');
         if (!dataList) return;
-        
+
         dataList.innerHTML = '';
         persons.forEach((person, index) => {
             const option = document.createElement('option');
@@ -243,6 +264,18 @@ pause
         });
     };
 
+    const modalPaymentMethodEl = document.getElementById('modal-payment-method');
+    const modalBankNameGroup = document.getElementById('modal-bank-name-group');
+    if (modalPaymentMethodEl) {
+        modalPaymentMethodEl.addEventListener('change', () => {
+            if (modalPaymentMethodEl.value === 'Bank Transfer') {
+                if (modalBankNameGroup) modalBankNameGroup.style.display = 'block';
+            } else {
+                if (modalBankNameGroup) modalBankNameGroup.style.display = 'none';
+            }
+        });
+    }
+
     if (paymentModalBtn) {
         paymentModalBtn.addEventListener('click', () => {
             window.populatePaymentPersonSelect();
@@ -250,10 +283,11 @@ pause
             paymentTotalRemaining.value = '';
             paymentAmount.value = '';
             paymentNewRemaining.value = '';
-            
+            if (modalPaymentMethodEl) modalPaymentMethodEl.dispatchEvent(new Event('change'));
+
             const historyContainer = document.getElementById('payment-person-history');
             if (historyContainer) historyContainer.style.display = 'none';
-            
+
             paymentModal.style.display = 'flex';
         });
     }
@@ -268,11 +302,11 @@ pause
         const personInputValue = paymentPersonInput.value.trim();
         let personName = personInputValue;
         const persons = window.Store.getPersons();
-        
+
         if (personInputValue) {
             const matchNumOnly = personInputValue.match(/^(\d+)$/);
             const matchWithDash = personInputValue.match(/^(\d+)\s*-\s*(.+)/);
-            
+
             if (matchNumOnly) {
                 const index = parseInt(matchNumOnly[1]) - 1;
                 if (persons[index]) personName = persons[index].name;
@@ -289,27 +323,36 @@ pause
         // Calculate total remaining and build history table
         const transactions = window.Store.getTransactions();
         let totalRemaining = 0;
-        
+
         const historyContainer = document.getElementById('payment-person-history');
         const historyTbody = document.getElementById('payment-history-tbody');
         if (historyTbody) historyTbody.innerHTML = '';
-        
+
         let hasHistory = false;
 
         if (personName) {
             // Sort transactions by date descending for the history view
             const personTx = transactions.filter(tx => tx.person === personName).sort((a, b) => new Date(b.date) - new Date(a.date));
-            
+
             personTx.forEach(tx => {
                 const totalAmt = parseFloat(tx.totalAmount) || 0;
                 const paidAmt = parseFloat(tx.paidAmount) || 0;
-                totalRemaining += (totalAmt - paidAmt);
-                
+
+                if (tx.type === 'out') {
+                    totalRemaining += (totalAmt - paidAmt);
+                } else if (tx.type === 'in') {
+                    totalRemaining -= (totalAmt - paidAmt);
+                } else if (tx.type === 'payment-out') {
+                    totalRemaining += (totalAmt + paidAmt);
+                } else {
+                    totalRemaining += (totalAmt - paidAmt);
+                }
+
                 if (historyTbody) {
                     hasHistory = true;
                     const dateObj = new Date(tx.date);
                     const dateStr = dateObj.toLocaleDateString();
-                    
+
                     const tr = document.createElement('tr');
                     tr.style.borderBottom = '1px solid var(--border)';
                     tr.innerHTML = `
@@ -322,15 +365,15 @@ pause
                 }
             });
         }
-        
+
         if (historyContainer) {
             historyContainer.style.display = hasHistory ? 'block' : 'none';
         }
-        
+
         paymentTotalRemaining.value = totalRemaining.toFixed(2);
-        
+
         const paid = parseFloat(paymentAmount.value) || 0;
-        const newRemaining = totalRemaining - paid;
+        const newRemaining = totalRemaining < 0 ? (totalRemaining + paid) : (totalRemaining - paid);
         paymentNewRemaining.value = newRemaining.toFixed(2);
     }
 
@@ -346,15 +389,15 @@ pause
     if (paymentForm) {
         paymentForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            
+
             const personInputValue = paymentPersonInput.value.trim();
             let personName = personInputValue;
             const persons = window.Store.getPersons();
-            
+
             if (personInputValue) {
                 const matchNumOnly = personInputValue.match(/^(\d+)$/);
                 const matchWithDash = personInputValue.match(/^(\d+)\s*-\s*(.+)/);
-                
+
                 if (matchNumOnly) {
                     const index = parseInt(matchNumOnly[1]) - 1;
                     if (persons[index]) personName = persons[index].name;
@@ -381,26 +424,42 @@ pause
             const paid = parseFloat(paymentAmount.value) || 0;
             const newRemaining = parseFloat(paymentNewRemaining.value) || 0;
             const currentBalance = parseFloat(paymentTotalRemaining.value) || 0;
-            
+
             // Calculate the adjustment needed to reach the desired new remaining balance
-            const adjustment = newRemaining - currentBalance + paid;
+            let txType = 'payment';
+            if (currentBalance < 0) {
+                txType = 'payment-out';
+            }
+
+            const adjustment = newRemaining - currentBalance + (txType === 'payment-out' ? -paid : paid);
+
+            const modalPaymentMethodEl = document.getElementById('modal-payment-method');
+            const paymentMethod = modalPaymentMethodEl ? modalPaymentMethodEl.value : 'Cash';
+            const modalBankNameInput = document.getElementById('modal-bank-name');
+            const bankName = (paymentMethod === 'Bank Transfer' && modalBankNameInput) ? modalBankNameInput.value.trim() : '';
 
             const tx = {
-                type: 'payment',
+                type: txType,
                 person: personName,
                 itemId: null,
                 itemName: 'Ledger Adjustment / Payment',
                 unit: '-',
-                weight: { mun: 0, kg: 0, grams: 0, ltr: 0, ml: 0 },
+                weight: { mun: 0, kg: 0, grams: 0, pound: 0, tola: 0 },
                 totalKg: 0,
+                ratePerUnit: 0,
                 ratePerKg: 0,
                 totalAmount: adjustment,
+                previousBalance: currentBalance,
+                grandTotal: currentBalance + (txType === 'payment-out' ? -adjustment : adjustment),
                 paidAmount: paid,
-                remainingAmount: newRemaining
+                remainingAmount: newRemaining,
+                paymentMethod: paymentMethod,
+                bankName: bankName,
+                date: new Date().toISOString()
             };
 
             window.Store.addTransaction(tx);
-            
+
             alert('Payment saved successfully!');
             paymentModal.style.display = 'none';
             updateDashboard();
@@ -432,7 +491,7 @@ function updateDashboard() {
                     const idStr = String(itemIndex + 1);
                     const nameLower = itemObj ? itemObj.name.toLowerCase() : (txi.itemName || '').toLowerCase();
                     const searchStr = itemObj ? `${idStr} - ${itemObj.name}`.toLowerCase() : (txi.itemName || '').toLowerCase();
-                    
+
                     const isNum = /^\d+$/.test(itemQuery);
                     if (isNum) {
                         return (idStr === itemQuery || nameLower.includes(itemQuery));
@@ -469,13 +528,22 @@ function updateDashboard() {
         }
         const tAmt = parseFloat(tx.totalAmount) || 0;
         const pAmt = parseFloat(tx.paidAmount) || 0;
-        totalRemaining += (tAmt - pAmt);
+
+        if (tx.type === 'out') {
+            totalRemaining += (tAmt - pAmt);
+        } else if (tx.type === 'in') {
+            totalRemaining -= (tAmt - pAmt);
+        } else if (tx.type === 'payment-out') {
+            totalRemaining += (tAmt + pAmt);
+        } else {
+            totalRemaining += (tAmt - pAmt);
+        }
     });
 
     const statIn = document.getElementById('stat-total-in');
     const statOut = document.getElementById('stat-total-out');
     const statRemaining = document.getElementById('stat-total-remaining');
-    
+
     if (statIn) statIn.textContent = totalIn.toFixed(2);
     if (statOut) statOut.textContent = totalOut.toFixed(2);
     if (statRemaining) statRemaining.textContent = totalRemaining.toFixed(2);
@@ -486,7 +554,7 @@ function updateDashboard() {
         let firstNormalizedUnit = 'Kg';
         if (transactions[0].unit === 'amount') firstNormalizedUnit = 'Pcs';
         else if (transactions[0].unit === 'ltr' || transactions[0].unit === 'ml') firstNormalizedUnit = 'Liters';
-        
+
         const allSame = transactions.every(tx => {
             let u = 'Kg';
             if (tx.unit === 'amount') u = 'Pcs';
@@ -507,7 +575,7 @@ function updateDashboard() {
         if (commonUnit === 'Kg') translatedUnit = 'کلوگرام';
         else if (commonUnit === 'Liters') translatedUnit = 'لیٹر';
         else if (commonUnit === 'Pcs') translatedUnit = 'تعداد';
-        
+
         translatedIn = "کل اسٹاک آمد";
         translatedOut = "کل اسٹاک روانگی";
     }
@@ -533,7 +601,7 @@ function checkRecentInvoice(transactions) {
 
     // Get the most recent transaction
     const latestTx = transactions[0];
-    
+
     // Check if user has already opened this specific invoice
     if (localStorage.getItem('dismissedInvoice') === latestTx.id) {
         container.style.display = 'none';
@@ -549,7 +617,7 @@ function checkRecentInvoice(transactions) {
         const lang = localStorage.getItem('lang') || 'en';
         const title = lang === 'ur' ? 'حالیہ ٹرانزیکشن (پچھلے 15 منٹ)' : 'Recent Transaction (Last 15 Mins)';
         const btnOpen = lang === 'ur' ? 'انوائس کھولیں' : 'Open Invoice';
-        
+
         container.innerHTML = `
             <div class="glass-panel" style="background: rgba(16, 185, 129, 0.05); border-left: 4px solid var(--success); padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <div>
@@ -572,13 +640,13 @@ function checkRecentInvoice(transactions) {
 
         // Auto hide after the 15th minute passes (timeout = (15 - diffMins) * 60 * 1000)
         // Set a timeout to re-check
-        setTimeout(() => checkRecentInvoice(window.Store.getTransactions()), 60000); 
+        setTimeout(() => checkRecentInvoice(window.Store.getTransactions()), 60000);
     } else {
         container.style.display = 'none';
     }
 }
 
-window.printAndRedirect = function(txId) {
+window.printAndRedirect = function (txId) {
     // Save to localStorage so it doesn't show up again
     localStorage.setItem('dismissedInvoice', txId);
     // Redirect to invoice page with print instruction
@@ -606,12 +674,12 @@ function renderItemSummary(items, transactions, itemQuery, personQuery) {
     const itemTotals = {};
     items.forEach((item, index) => {
         itemTotals[item.id] = { name: `${index + 1} - ${item.name}`, in: 0, out: 0, show: true };
-        
+
         if (itemQuery) {
             const idStr = String(index + 1);
             const nameLower = item.name.toLowerCase();
             const isNum = /^\d+$/.test(itemQuery);
-            
+
             if (isNum) {
                 if (idStr !== itemQuery && !nameLower.includes(itemQuery)) {
                     itemTotals[item.id].show = false;
@@ -641,13 +709,13 @@ function renderItemSummary(items, transactions, itemQuery, personQuery) {
     items.forEach(item => {
         const stats = itemTotals[item.id];
         if (!stats.show) return;
-        
+
         // If searching by person, only show items that person has activity for
         if (personQuery && stats.in === 0 && stats.out === 0) return;
 
         renderedCount++;
         const currentStock = stats.in - stats.out;
-        
+
         let displayUnit = stats.unit || 'Kg';
         if (localStorage.getItem('lang') === 'ur') {
             if (displayUnit === 'Pcs') displayUnit = 'تعداد';

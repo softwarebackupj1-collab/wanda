@@ -21,6 +21,9 @@
                 <div style="margin-left: auto; display: flex; gap: 10px;">
                     <button id="lang-toggle" class="lang-btn" aria-label="Toggle Language">اردو</button>
                     <button id="theme-toggle" class="theme-btn" aria-label="Toggle Theme"><i class='bx bx-sun'></i></button>
+                    <button id="login-btn" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                        <i class='bx bxl-google'></i> <span>Login</span>
+                    </button>
                 </div>
             </div>
 
@@ -32,8 +35,16 @@
             <!-- Invoices Section -->
             <div class="glass-panel mt-4" style="margin-top: 24px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
-                    <h2 data-i18n="nav_invoices">Invoices</h2>
-                    <input type="text" id="admin-invoice-search" placeholder="Search Invoice by Person Name or TXN ID..." style="width: 100%; max-width: 400px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary);">
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <h2 data-i18n="nav_invoices">Invoices</h2>
+                        <button id="btn-download-statement" class="btn btn-secondary" style="padding: 6px 12px; display: flex; align-items: center; gap: 6px; font-size: 13px;" title="Download Statement as Image">
+                            <i class='bx bx-image-download'></i> <span data-i18n="btn_download_statement">Download Statement</span>
+                        </button>
+                    </div>
+                    <div style="display: flex; gap: 12px; width: 100%; max-width: 600px; justify-content: flex-end; align-items: center;">
+                        <input type="date" id="admin-invoice-date-search" title="Filter by date" style="padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary);" onclick="this.showPicker && this.showPicker()">
+                        <input type="text" id="admin-invoice-search" placeholder="Search Invoice by Person Name or TXN ID..." style="flex: 1; min-width: 200px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-primary);">
+                    </div>
                 </div>
                 <div class="table-container" style="max-height: calc(100vh - 300px);">
                     <table id="invoices-table">
@@ -43,9 +54,11 @@
                                 <th data-i18n="th_date">Date</th>
                                 <th data-i18n="th_type">Type</th>
                                 <th data-i18n="th_item">Item</th>
+                                <th data-i18n="th_payment_method">Payment Method</th>
                                 <th data-i18n="th_total_amt">Total Amt</th>
+                                <th data-i18n="label_paid">Paid</th>
                                 <th data-i18n="th_remaining">Remaining</th>
-                                <th data-i18n="th_actions">Actions</th>
+                                <th data-i18n="th_actions" data-html2canvas-ignore="true">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -79,10 +92,12 @@
             </tbody>
         </table>
         <div class="print-footer-info">
-            <p><span id="label-items-total-print"></span> <strong id="invoice-items-total"></strong></p>
+            <p id="items-total-row"><span id="label-items-total-print"></span> <strong id="invoice-items-total"></strong></p>
             <p id="prev-balance-row" style="display:none;"><span id="label-prev-bal-print"></span> <strong id="invoice-prev-bal"></strong></p>
             <p id="grand-total-row" style="display:none;"><span id="label-grand-total-print"></span> <strong id="invoice-grand-total"></strong></p>
             <p><span id="label-paid-print"></span> <strong id="invoice-paid"></strong></p>
+            <p id="payment-method-row" style="display:none;"><span id="label-payment-method-print"></span> <strong id="invoice-payment-method"></strong></p>
+            <p id="bank-name-row-print" style="display:none;"><span id="label-bank-name-print"></span> <strong id="invoice-bank-name"></strong></p>
             <p><span id="label-rem-print"></span> <strong id="invoice-remaining"></strong></p>
         </div>
         <div class="invoice-footer">
@@ -91,7 +106,6 @@
     </div>
 
     <!-- Scripts -->
-    <script src="translations.js"></script>
     <script>
         // Provide mock functions for app.js so it doesn't crash on this page
         window.populateStockItemSelect = () => {};
@@ -100,10 +114,15 @@
         window.populateDashboardDatalists = () => {};
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="store.js"></script>
-    <script src="app.js"></script>
-    <script src="stock.js"></script> 
-    <script src="invoice.js"></script> 
-    <script src="admin.js"></script>
+    <script src="translations.js?v=5"></script>
+    <script src="store.js?v=5"></script>
+    <script src="app.js?v=5"></script>
+    <script src="stock.js?v=5"></script> 
+    <script src="invoice.js?v=5"></script> 
+    <script src="admin.js?v=5"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+    <script src="auth.js?v=4"></script>
+    <script src="drive-sync.js?v=1"></script>
 </body>
 </html>

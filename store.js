@@ -13,6 +13,7 @@ class Store {
 
     static saveItems(items) {
         localStorage.setItem(StorageKey.ITEMS, JSON.stringify(items));
+        if (window.syncToDrive) window.syncToDrive();
     }
 
     static addItem(name) {
@@ -70,6 +71,7 @@ class Store {
 
     static savePersons(persons) {
         localStorage.setItem(StorageKey.PERSONS, JSON.stringify(persons));
+        if (window.syncToDrive) window.syncToDrive();
     }
 
     static addPerson(name) {
@@ -93,12 +95,13 @@ class Store {
 
     static saveTransactions(transactions) {
         localStorage.setItem(StorageKey.TRANSACTIONS, JSON.stringify(transactions));
+        if (window.syncToDrive) window.syncToDrive();
     }
 
     static addTransaction(tx) {
         const txs = this.getTransactions();
         tx.id = 'TXN-' + Math.floor(Math.random() * 1000000);
-        tx.date = new Date().toISOString();
+        tx.date = tx.date || new Date().toISOString();
         txs.unshift(tx); // Add to beginning
         this.saveTransactions(txs);
         return tx;

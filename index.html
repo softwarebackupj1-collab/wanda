@@ -37,6 +37,9 @@
                     <button id="lang-toggle" class="lang-btn" aria-label="Toggle Language">اردو</button>
                     <button id="theme-toggle" class="theme-btn" aria-label="Toggle Theme"><i
                             class='bx bx-sun'></i></button>
+                    <button id="login-btn" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                        <i class='bx bxl-google'></i> <span>Login</span>
+                    </button>
                 </div>
             </div>
 
@@ -53,9 +56,14 @@
                                     <div class="form-group">
                                         <label for="transaction-type" data-i18n="label_tx_type">Transaction Type</label>
                                         <select id="transaction-type" required>
+                                            <option value="" disabled selected data-i18n="opt_select_type">-</option>
                                             <option value="in" data-i18n="opt_in">Stock In (Purchase)</option>
                                             <option value="out" data-i18n="opt_out">Stock Out (Sale)</option>
                                         </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="transaction-date" data-i18n="label_date">Date</label>
+                                        <input type="date" id="transaction-date">
                                     </div>
                                     <div class="form-group" style="flex: 1 1 100%;">
                                         <label for="person-name" data-i18n="label_person">Person Name</label>
@@ -66,6 +74,7 @@
                                     </div>
                                 </div>
 
+                                <div id="item-fields-container">
                                 <div class="form-section-title" data-i18n="sec_add_item" style="margin-top: 8px;">Add
                                     Item</div>
                                 <div class="form-row">
@@ -93,9 +102,11 @@
                                             <option value="kg" selected data-i18n="opt_kg">Kg</option>
                                             <option value="mun" data-i18n="opt_mun">Mun (40kg = 1 Mun)</option>
                                             <option value="gram" data-i18n="opt_gram">Grams</option>
-                                            <option value="ltr" data-i18n="opt_ltr">Liters</option>
-                                            <option value="ml" data-i18n="opt_ml">Milliliters</option>
                                             <option value="amount" data-i18n="opt_amount">Pcs</option>
+                                            <option value="bag50" data-i18n="opt_bag50">Bag (50kg = 1 Bag)</option>
+                                            <option value="bag34" data-i18n="opt_bag34">Bag (34kg = 1 Bag)</option>
+                                            <option value="pound" data-i18n="opt_pound">Pound</option>
+                                            <option value="tola" data-i18n="opt_tola">Tola</option>
                                         </select>
                                     </div>
                                     <div class="form-group">
@@ -172,6 +183,7 @@
                                         </tbody>
                                     </table>
                                 </div>
+                                </div>
 
                                 <div class="form-section-title" data-i18n="sec_financials">Checkout</div>
                                 <div class="form-row">
@@ -198,6 +210,24 @@
                                         <input type="text" inputmode="decimal" id="amount-paid" required>
                                     </div>
                                     <div class="form-group">
+                                        <label for="payment-method" data-i18n="label_payment_method">Payment Method</label>
+                                        <select id="payment-method">
+                                            <option value="-">-</option>
+                                            <option value="Cash" data-i18n="opt_cash">Cash</option>
+                                            <option value="JazzCash" data-i18n="opt_jazzcash">JazzCash</option>
+                                            <option value="EasyPaisa" data-i18n="opt_easypaisa">EasyPaisa</option>
+                                            <option value="Bank Transfer" data-i18n="opt_bank">Bank Transfer</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row" id="bank-name-row" style="display: none;">
+                                    <div class="form-group" style="flex: 1 1 100%;">
+                                        <label for="bank-name" data-i18n="label_bank_name">Bank Name</label>
+                                        <input type="text" id="bank-name" placeholder="Enter bank name..." data-i18n-placeholder="placeholder_bank_name">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group" style="flex: 1 1 100%;">
                                         <label for="amount-remaining" data-i18n="label_rem_bal">Remaining
                                             Balance</label>
                                         <input type="number" id="amount-remaining" readonly
@@ -223,41 +253,55 @@
         <div class="modal-content">
             <h3 class="modal-title" data-i18n="modal_payment_title">Add Payment</h3>
             <form id="payment-form">
-                <div class="form-group" style="margin-bottom: 16px;">
+                <div class="form-group" style="margin-bottom: 8px;">
                     <label for="payment-person" data-i18n="label_person">Person Name</label>
                     <input type="text" id="payment-person" class="modal-input" list="payment-person-list" required
-                        placeholder="Enter or select a person..." style="margin-bottom: 8px;" autocomplete="off">
+                        placeholder="Enter or select a person..." style="margin-bottom: 4px; padding: 6px 10px; font-size: 0.9rem;" autocomplete="off">
                     <datalist id="payment-person-list"></datalist>
                 </div>
                 <div id="payment-person-history"
-                    style="display: none; margin-bottom: 16px; max-height: 150px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-main); padding: 8px;">
-                    <table style="width: 100%; font-size: 0.85rem; text-align: left; border-collapse: collapse;">
+                    style="display: none; margin-bottom: 8px; max-height: 100px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-main); padding: 8px;">
+                    <table style="width: 100%; font-size: 0.8rem; text-align: left; border-collapse: collapse;">
                         <thead>
                             <tr style="border-bottom: 1px solid var(--border); color: var(--text-secondary);">
-                                <th style="padding: 4px;" data-i18n="th_date">Date</th>
-                                <th style="padding: 4px;" data-i18n="th_item">Item(s)</th>
-                                <th style="padding: 4px;" data-i18n="th_total_amt">Total</th>
-                                <th style="padding: 4px;" data-i18n="label_paid">Paid</th>
+                                <th style="padding: 2px;" data-i18n="th_date">Date</th>
+                                <th style="padding: 2px;" data-i18n="th_item">Item(s)</th>
+                                <th style="padding: 2px;" data-i18n="th_total_amt">Total</th>
+                                <th style="padding: 2px;" data-i18n="label_paid">Paid</th>
                             </tr>
                         </thead>
                         <tbody id="payment-history-tbody">
                         </tbody>
                     </table>
                 </div>
-                <div class="form-group" style="margin-bottom: 16px;">
+                <div class="form-group" style="margin-bottom: 8px;">
                     <label data-i18n="label_current_bal">Current Balance</label>
                     <input type="number" id="payment-total-remaining" class="modal-input readonly-input alert-text"
-                        readonly style="margin-bottom: 8px;">
+                        readonly style="margin-bottom: 4px; padding: 6px 10px; font-size: 0.9rem;">
                 </div>
-                <div class="form-group" style="margin-bottom: 16px;">
+                <div class="form-group" style="margin-bottom: 8px;">
                     <label for="payment-amount" data-i18n="label_paid">Amount Paid</label>
-                    <input type="number" id="payment-amount" class="modal-input" style="margin-bottom: 8px;" min="0"
+                    <input type="number" id="payment-amount" class="modal-input" style="margin-bottom: 4px; padding: 6px 10px; font-size: 0.9rem;" min="0"
                         step="any" placeholder="0">
                 </div>
-                <div class="form-group" style="margin-bottom: 24px;">
+                <div class="form-group" style="margin-bottom: 8px;">
+                    <label for="modal-payment-method" data-i18n="label_payment_method">Payment Method</label>
+                    <select id="modal-payment-method" class="modal-input" style="margin-bottom: 4px; padding: 6px 10px; font-size: 0.9rem;">
+                        <option value="-">-</option>
+                        <option value="Cash" data-i18n="opt_cash">Cash</option>
+                        <option value="JazzCash" data-i18n="opt_jazzcash">JazzCash</option>
+                        <option value="EasyPaisa" data-i18n="opt_easypaisa">EasyPaisa</option>
+                        <option value="Bank Transfer" data-i18n="opt_bank">Bank Transfer</option>
+                    </select>
+                </div>
+                <div class="form-group" id="modal-bank-name-group" style="display: none; margin-bottom: 8px;">
+                    <label for="modal-bank-name" data-i18n="label_bank_name">Bank Name</label>
+                    <input type="text" id="modal-bank-name" class="modal-input" style="margin-bottom: 4px; padding: 6px 10px; font-size: 0.9rem;" placeholder="Enter bank name..." data-i18n-placeholder="placeholder_bank_name">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
                     <label data-i18n="label_new_rem_bal">New Remaining Balance</label>
                     <input type="number" id="payment-new-remaining" class="modal-input" required
-                        style="margin-bottom: 8px;" step="any" placeholder="0">
+                        style="margin-bottom: 4px; padding: 6px 10px; font-size: 0.9rem;" step="any" placeholder="0">
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="modal-btn cancel" id="cancel-payment-btn"
@@ -268,11 +312,15 @@
         </div>
     </div>
 
-    <script src="translations.js"></script>
-    <script src="store.js"></script>
-    <script src="app.js"></script>
-    <script src="stock.js"></script>
-    <script src="admin.js"></script>
+    <script src="translations.js?v=4"></script>
+    <script src="store.js?v=4"></script>
+    <script src="app.js?v=4"></script>
+    <script src="stock.js?v=4"></script>
+    <script src="admin.js?v=4"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+    <script src="auth.js?v=4"></script>
+    <script src="drive-sync.js?v=1"></script>
 </body>
 
 </html>

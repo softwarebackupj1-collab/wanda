@@ -450,6 +450,25 @@ input:focus, select:focus {
     box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.15);
 }
 
+/* Date Input DD/MM/YYYY Hack */
+input[type="date"] {
+    position: relative;
+}
+
+input[type="date"]::-webkit-datetime-edit {
+    color: transparent;
+}
+
+input[type="date"]::before {
+    content: attr(data-date);
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-primary);
+    pointer-events: none;
+}
+
 input.readonly-input {
     background: transparent;
     border-style: dashed;
@@ -608,6 +627,10 @@ body.light-theme select:hover {
 body.light-theme input:focus, 
 body.light-theme select:focus {
     background: #ffffff;
+}
+
+body.light-theme input[type="date"]::before {
+    color: var(--text-primary);
 }
 
 body.light-theme tr:hover td {
