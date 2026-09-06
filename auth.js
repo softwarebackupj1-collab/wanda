@@ -1,6 +1,6 @@
 // TODO: Replace with your actual Firebase project configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyD9-ZIjirf1VQxC06CzbL-df-RNknRpdxxc",
+  apiKey: "AIzaSyD9-ZIjirf1VQxC06CzbL-df-RNknRpdxc",
   authDomain: "wanda-10967.firebaseapp.com",
   projectId: "wanda-10967",
   storageBucket: "wanda-10967.firebasestorage.app",
