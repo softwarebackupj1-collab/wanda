@@ -53,21 +53,19 @@ window.syncToDrive = async () => {
 };
 
 async function createFile(filename, content, token) {
+    // Step 1: Create the file metadata
     const metadata = {
         name: filename,
         mimeType: 'application/json'
     };
     
-    const form = new FormData();
-    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-    form.append('file', new Blob([content], { type: 'application/json' }));
-    
-    const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    const res = await fetch('https://www.googleapis.com/drive/v3/files', {
         method: 'POST',
         headers: {
-            'Authorization': 'Bearer ' + token
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
         },
-        body: form
+        body: JSON.stringify(metadata)
     });
     
     if (!res.ok) {
@@ -75,10 +73,16 @@ async function createFile(filename, content, token) {
             window.googleDriveAccessToken = null; // Token expired
             sessionStorage.removeItem('googleDriveAccessToken');
         }
-        throw new Error("Upload failed: " + res.status);
+        throw new Error("Create metadata failed: " + res.status);
     }
+    
     const data = await res.json();
-    return data.id;
+    const fileId = data.id;
+    
+    // Step 2: Upload the actual content to this new file ID
+    await updateFile(fileId, content, token);
+    
+    return fileId;
 }
 
 async function updateFile(fileId, content, token) {
