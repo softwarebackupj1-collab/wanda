@@ -60,13 +60,23 @@ if (auth) {
     if (user) {
       // User is signed in
       if (loginBtn) {
-        loginBtn.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <img src="${user.photoURL}" alt="Profile" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">
-            <span>Logout</span>
-          </div>
-        `;
-        loginBtn.onclick = window.logout;
+        if (!window.googleDriveAccessToken) {
+            loginBtn.innerHTML = `
+              <div style="display: flex; align-items: center; gap: 8px; color: #ffeb3b;">
+                <i class='bx bx-error'></i>
+                <span>Reconnect Drive</span>
+              </div>
+            `;
+            loginBtn.onclick = window.loginWithGoogle;
+        } else {
+            loginBtn.innerHTML = `
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <img src="${user.photoURL}" alt="Profile" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">
+                <span>Logout</span>
+              </div>
+            `;
+            loginBtn.onclick = window.logout;
+        }
       }
       console.log("User logged in:", user.displayName);
     } else {

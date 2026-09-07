@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Push restored data to Google Drive so it syncs to other devices
                         if (window.syncToDrive) {
                             if (!window.googleDriveAccessToken) {
-                                alert('Data restored locally!\n\nIMPORTANT: You are not logged in right now. To sync this backup to your other devices, please click the "Login" button at the top right after the page reloads.');
+                                alert('Data restored locally!\n\nIMPORTANT: Your Google Drive connection has expired (or this is a new tab). To sync this backup to your other devices, please click the "Reconnect Drive" (or Login) button at the top right.');
                             } else {
                                 await window.syncToDrive();
                                 alert('Data restored and synced to Google Drive successfully! The page will now reload.');
