@@ -11,6 +11,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 let auth, provider;
+window.googleDriveAccessToken = sessionStorage.getItem('googleDriveAccessToken') || null;
 
 try {
   if (!firebase.apps.length) {
@@ -32,6 +33,7 @@ window.loginWithGoogle = () => {
     const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
     if (credential && credential.accessToken) {
       window.googleDriveAccessToken = credential.accessToken;
+      sessionStorage.setItem('googleDriveAccessToken', credential.accessToken);
       console.log("Google Drive Access Token obtained.");
       if (window.pullFromDrive) {
           window.pullFromDrive(); // attempt to pull data from drive on login
@@ -46,6 +48,8 @@ window.loginWithGoogle = () => {
 window.logout = () => {
   if (auth) {
     auth.signOut();
+    window.googleDriveAccessToken = null;
+    sessionStorage.removeItem('googleDriveAccessToken');
   }
 };
 

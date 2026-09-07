@@ -73,6 +73,7 @@ async function createFile(filename, content, token) {
     if (!res.ok) {
         if (res.status === 401) {
             window.googleDriveAccessToken = null; // Token expired
+            sessionStorage.removeItem('googleDriveAccessToken');
         }
         throw new Error("Upload failed: " + res.status);
     }
@@ -93,6 +94,7 @@ async function updateFile(fileId, content, token) {
     if (!res.ok) {
         if (res.status === 401) {
             window.googleDriveAccessToken = null; // Token expired
+            sessionStorage.removeItem('googleDriveAccessToken');
         }
         throw new Error("Update failed: " + res.status);
     }
@@ -146,6 +148,7 @@ async function searchFile(filename, token) {
     if (!res.ok) {
         if (res.status === 401) {
             window.googleDriveAccessToken = null;
+            sessionStorage.removeItem('googleDriveAccessToken');
         }
         throw new Error("Search failed: " + res.status);
     }
