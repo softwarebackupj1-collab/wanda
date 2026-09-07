@@ -20,6 +20,9 @@ try {
   auth = firebase.auth();
   provider = new firebase.auth.GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/drive.file');
+  provider.setCustomParameters({
+    prompt: 'consent'
+  });
 } catch (error) {
   console.error("Firebase initialization error. Did you add your config?", error);
 }

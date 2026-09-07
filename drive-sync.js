@@ -114,6 +114,33 @@ window.pullFromDrive = async () => {
         const fileId = await searchFile('stockmaster_backup.json', token);
         
         if (fileId) {
+            const localFileId = localStorage.getItem('drive_backup_file_id');
+            
+            // Check if local storage has actual data
+            const localItems = localStorage.getItem('inventory_items');
+            const localTx = localStorage.getItem('inventory_transactions');
+            const hasLocalData = (localItems && JSON.parse(localItems).length > 0) || 
+                                 (localTx && JSON.parse(localTx).length > 0);
+
+            if (hasLocalData) {
+                if (localFileId === fileId) {
+                    // This device is already linked to this backup file.
+                    // They just reconnected their drive. We should PUSH any offline changes they made.
+                    console.log("Device already linked. Pushing offline changes to Google Drive...");
+                    window.syncToDrive();
+                    alert("Drive reconnected! Your offline changes are being synced to Google Drive.");
+                    return;
+                } else {
+                    // This is either a new device that has some unsynced local data, or a different Google account.
+                    const pull = confirm("Google Drive Backup Found!\n\nThis device also has some local data.\n\nClick 'OK' to DOWNLOAD from Google Drive (this will replace your local data).\n\nClick 'Cancel' to UPLOAD your local data (this will replace the Google Drive backup).");
+                    if (!pull) {
+                        console.log("User chose to push local data to Drive.");
+                        window.syncToDrive();
+                        return;
+                    }
+                }
+            }
+
             console.log("Backup found! Downloading data...");
             localStorage.setItem('drive_backup_file_id', fileId);
             const content = await downloadFile(fileId, token);
@@ -124,6 +151,7 @@ window.pullFromDrive = async () => {
                 if (content.persons) localStorage.setItem('inventory_persons', JSON.stringify(content.persons));
                 
                 console.log("Data successfully restored from Google Drive.");
+                alert("Data successfully synced from Google Drive!");
                 // Reload the page to reflect the synced data
                 window.location.reload();
             }
