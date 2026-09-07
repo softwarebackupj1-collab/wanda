@@ -29,11 +29,18 @@ window.loginWithGoogle = () => {
     alert("Firebase is not initialized. Please add your config to auth.js");
     return;
   }
+  provider.setCustomParameters({
+    prompt: 'select_account'
+  });
+  
   auth.signInWithPopup(provider).then((result) => {
-    const credential = firebase.auth.GoogleAuthProvider.credentialFromResult(result);
-    if (credential && credential.accessToken) {
-      window.googleDriveAccessToken = credential.accessToken;
-      sessionStorage.setItem('googleDriveAccessToken', credential.accessToken);
+    // In Firebase compat, the credential and token are directly on the result object
+    const credential = result.credential;
+    const token = credential ? credential.accessToken : null;
+    
+    if (token) {
+      window.googleDriveAccessToken = token;
+      sessionStorage.setItem('googleDriveAccessToken', token);
       console.log("Google Drive Access Token obtained.");
       
       // Update UI immediately since onAuthStateChanged might not fire if user was already logged into Firebase
