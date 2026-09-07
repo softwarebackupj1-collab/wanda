@@ -28,7 +28,8 @@
                     <button id="lang-toggle" class="lang-btn" aria-label="Toggle Language">اردو</button>
                     <button id="theme-toggle" class="theme-btn" aria-label="Toggle Theme"><i
                             class='bx bx-sun'></i></button>
-                    <button id="login-btn" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                    <button id="login-btn" class="btn btn-primary"
+                        style="display: flex; align-items: center; gap: 8px;">
                         <i class='bx bxl-google'></i> <span>Login</span>
                     </button>
                 </div>
@@ -71,38 +72,51 @@
                     </div>
                     <div class="stat-card"
                         style="background: linear-gradient(135deg, #ec4899, #be185d); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; color: white; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3); border: none;">
-                        <h3 data-i18n="stat_payables" style="margin: 0; font-size: 0.9rem; color: rgba(255,255,255,0.8);">
+                        <h3 data-i18n="stat_payables"
+                            style="margin: 0; font-size: 0.9rem; color: rgba(255,255,255,0.8);">
                             Total Payables (To Give)</h3>
                         <p id="admin-stat-payables" class="stat-value"
                             style="margin: 0; font-size: 1.8rem; font-weight: 700;">0.00</p>
                     </div>
                 </div>
 
-            <h2 data-i18n="admin_profit_summary" style="margin-top: 32px; margin-bottom: 16px;">Profit Summary (Sales - Purchases)</h2>
-            <div class="dashboard-stats" style="margin-bottom: 32px;">
-                <div class="stat-card" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; color: white; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); border: none;">
-                    <h3 data-i18n="stat_profit_week" style="margin: 0; font-size: 0.9rem; color: rgba(255,255,255,0.8);">This Week's Profit</h3>
-                    <p id="admin-stat-profit-week" class="stat-value" style="margin: 0; font-size: 1.8rem; font-weight: 700;">0.00</p>
+                <h2 data-i18n="admin_profit_summary" style="margin-top: 32px; margin-bottom: 16px;">Profit Summary
+                    (Sales - Purchases)</h2>
+                <div class="dashboard-stats" style="margin-bottom: 32px;">
+                    <div class="stat-card"
+                        style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; color: white; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); border: none;">
+                        <h3 data-i18n="stat_profit_week"
+                            style="margin: 0; font-size: 0.9rem; color: rgba(255,255,255,0.8);">This Week's Profit</h3>
+                        <p id="admin-stat-profit-week" class="stat-value"
+                            style="margin: 0; font-size: 1.8rem; font-weight: 700;">0.00</p>
+                    </div>
+                    <div class="stat-card"
+                        style="background: linear-gradient(135deg, #10b981, #059669); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); border: none;">
+                        <h3 data-i18n="stat_profit_month"
+                            style="margin: 0; font-size: 0.9rem; color: rgba(255,255,255,0.8);">This Month's Profit</h3>
+                        <p id="admin-stat-profit-month" class="stat-value"
+                            style="margin: 0; font-size: 1.8rem; font-weight: 700;">0.00</p>
+                    </div>
+                    <div class="stat-card"
+                        style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; color: white; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); border: none;">
+                        <h3 data-i18n="stat_profit_overall"
+                            style="margin: 0; font-size: 0.9rem; color: rgba(255,255,255,0.8);">Overall Profit</h3>
+                        <p id="admin-stat-profit-overall" class="stat-value"
+                            style="margin: 0; font-size: 1.8rem; font-weight: 700;">0.00</p>
+                    </div>
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #10b981, #059669); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); border: none;">
-                    <h3 data-i18n="stat_profit_month" style="margin: 0; font-size: 0.9rem; color: rgba(255,255,255,0.8);">This Month's Profit</h3>
-                    <p id="admin-stat-profit-month" class="stat-value" style="margin: 0; font-size: 1.8rem; font-weight: 700;">0.00</p>
+
+                <div style="display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;">
+                    <button id="btn-export-data" class="btn btn-primary"
+                        style="display: flex; align-items: center; gap: 8px;">
+                        <i class='bx bx-export'></i> <span data-i18n="btn_export_data">Backup Data (Export)</span>
+                    </button>
+                    <button id="btn-import-data" class="btn btn-secondary"
+                        style="display: flex; align-items: center; gap: 8px;">
+                        <i class='bx bx-import'></i> <span data-i18n="btn_import_data">Restore Data (Import)</span>
+                    </button>
+                    <input type="file" id="import-data-file" accept=".json" style="display: none;">
                 </div>
-                <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b, #d97706); padding: 20px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; color: white; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); border: none;">
-                    <h3 data-i18n="stat_profit_overall" style="margin: 0; font-size: 0.9rem; color: rgba(255,255,255,0.8);">Overall Profit</h3>
-                    <p id="admin-stat-profit-overall" class="stat-value" style="margin: 0; font-size: 1.8rem; font-weight: 700;">0.00</p>
-                </div>
-            </div>
-            
-            <div style="display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;">
-                <button id="btn-export-data" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
-                    <i class='bx bx-export'></i> <span data-i18n="btn_export_data">Backup Data (Export)</span>
-                </button>
-                <button id="btn-import-data" class="btn btn-secondary" style="display: flex; align-items: center; gap: 8px;">
-                    <i class='bx bx-import'></i> <span data-i18n="btn_import_data">Restore Data (Import)</span>
-                </button>
-                <input type="file" id="import-data-file" accept=".json" style="display: none;">
-            </div>
 
                 <div class="admin-grid">
                     <!-- Add Item Form -->
@@ -166,7 +180,8 @@
                     </div>
                 </div>
 
-                <div class="glass-panel" style="margin-bottom: 32px; background: rgba(239, 68, 68, 0.05); border-left: 4px solid var(--danger);">
+                <div class="glass-panel"
+                    style="margin-bottom: 32px; background: rgba(239, 68, 68, 0.05); border-left: 4px solid var(--danger);">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
                         <h2 data-i18n="admin_payables" style="margin: 0; color: var(--danger);">Payables (To Give)
@@ -216,7 +231,8 @@
             <tbody id="print-body"></tbody>
         </table>
         <div class="print-footer-info">
-            <p id="items-total-row"><span id="label-items-total-print"></span> <strong id="invoice-items-total"></strong></p>
+            <p id="items-total-row"><span id="label-items-total-print"></span> <strong
+                    id="invoice-items-total"></strong></p>
             <p id="prev-balance-row" style="display:none;"><span id="label-prev-bal-print"></span> <strong
                     id="invoice-prev-bal"></strong></p>
             <p id="grand-total-row" style="display:none;"><span id="label-grand-total-print"></span> <strong
@@ -240,13 +256,15 @@
     </script>
     <script src="store.js?v=4"></script>
     <script src="app.js?v=4"></script>
-    <script src="stock.js?v=4"></script> <!-- Included for Store access (assuming Store is in stock.js or invoice.js) -->
+    <script src="stock.js?v=4"></script>
+    <!-- Included for Store access (assuming Store is in stock.js or invoice.js) -->
     <script src="invoice.js?v=4"></script>
     <script src="admin.js?v=4"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
-    <script src="auth.js?v=4"></script>
-    <script src="drive-sync.js?v=1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth.js?v=5"></script>
+    <script src="supabase-sync.js?v=1"></script>
+
 </body>
 
 </html>

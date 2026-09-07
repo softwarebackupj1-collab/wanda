@@ -13,7 +13,7 @@ class Store {
 
     static saveItems(items) {
         localStorage.setItem(StorageKey.ITEMS, JSON.stringify(items));
-        if (window.syncToDrive) window.syncToDrive();
+        if (window.syncToSupabase) window.syncToSupabase();
     }
 
     static addItem(name) {
@@ -71,7 +71,7 @@ class Store {
 
     static savePersons(persons) {
         localStorage.setItem(StorageKey.PERSONS, JSON.stringify(persons));
-        if (window.syncToDrive) window.syncToDrive();
+        if (window.syncToSupabase) window.syncToSupabase();
     }
 
     static addPerson(name) {
@@ -95,7 +95,7 @@ class Store {
 
     static saveTransactions(transactions) {
         localStorage.setItem(StorageKey.TRANSACTIONS, JSON.stringify(transactions));
-        if (window.syncToDrive) window.syncToDrive();
+        if (window.syncToSupabase) window.syncToSupabase();
     }
 
     static addTransaction(tx) {
