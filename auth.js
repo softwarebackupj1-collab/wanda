@@ -1,12 +1,12 @@
 // TODO: Replace with your actual Firebase project configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyD9-ZIjirf1VQxC06CzbL-df-RNknRpdxc",
-  authDomain: "wanda-10967.firebaseapp.com",
-  projectId: "wanda-10967",
-  storageBucket: "wanda-10967.firebasestorage.app",
-  messagingSenderId: "824566163953",
-  appId: "1:824566163953:web:583d2f7f37be5db362fc50",
-  measurementId: "G-QV14VJ4XPD"
+  apiKey: "AIzaSyAowVyXifjhFhBrzKqjZqDvLj6tKO4lHFw",
+  authDomain: "wanda-168cd.firebaseapp.com",
+  projectId: "wanda-168cd",
+  storageBucket: "wanda-168cd.firebasestorage.app",
+  messagingSenderId: "114253740929",
+  appId: "1:114253740929:web:d4d12401654cb6a3c34680",
+  measurementId: "G-RF88KE758L"
 };
 
 // Initialize Firebase
