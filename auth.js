@@ -33,8 +33,8 @@ window.loginWithGoogle = () => {
     if (credential && credential.accessToken) {
       window.googleDriveAccessToken = credential.accessToken;
       console.log("Google Drive Access Token obtained.");
-      if (window.syncToDrive) {
-          window.syncToDrive(); // trigger initial sync
+      if (window.pullFromDrive) {
+          window.pullFromDrive(); // attempt to pull data from drive on login
       }
     }
   }).catch(error => {
