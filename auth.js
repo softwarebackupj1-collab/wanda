@@ -45,6 +45,8 @@ window.loginWithGoogle = () => {
       if (window.pullFromDrive) {
           window.pullFromDrive(); // attempt to pull data from drive on login
       }
+    } else {
+      alert("Login succeeded, but Google Drive Access Token is missing from the response! This usually happens if you haven't granted the Google Drive permission. Please log out and log back in.");
     }
   }).catch(error => {
     console.error("Login failed", error);
