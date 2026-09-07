@@ -20,9 +20,6 @@ try {
   auth = firebase.auth();
   provider = new firebase.auth.GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/drive.file');
-  provider.setCustomParameters({
-    prompt: 'consent'
-  });
 } catch (error) {
   console.error("Firebase initialization error. Did you add your config?", error);
 }
@@ -46,7 +43,8 @@ window.loginWithGoogle = () => {
           window.pullFromDrive(); // attempt to pull data from drive on login
       }
     } else {
-      alert("Login succeeded, but Google Drive Access Token is missing from the response! This usually happens if you haven't granted the Google Drive permission. Please log out and log back in.");
+      alert("Login succeeded, but Google Drive Access Token is missing from the response! This usually happens if you haven't granted the Google Drive permission. We will now log you out so you can try again.");
+      window.logout();
     }
   }).catch(error => {
     console.error("Login failed", error);
