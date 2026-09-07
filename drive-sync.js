@@ -16,11 +16,19 @@ window.syncToDrive = async () => {
     };
     
     const fileContent = JSON.stringify(data, null, 2);
-    const fileId = localStorage.getItem('drive_backup_file_id');
+    let fileId = localStorage.getItem('drive_backup_file_id');
     
     try {
         // Show a brief sync indicator if desired, or just do it silently
         console.log("Syncing to Google Drive...");
+        
+        if (!fileId) {
+            // Double check if file exists before creating a new one
+            fileId = await searchFile('stockmaster_backup.json', token);
+            if (fileId) {
+                localStorage.setItem('drive_backup_file_id', fileId);
+            }
+        }
         
         if (fileId) {
             // Update existing file
@@ -128,7 +136,7 @@ window.pullFromDrive = async () => {
 
 async function searchFile(filename, token) {
     const query = encodeURIComponent(`name='${filename}' and trashed=false`);
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`, {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name,modifiedTime)&orderBy=modifiedTime desc`, {
         method: 'GET',
         headers: {
             'Authorization': 'Bearer ' + token
@@ -144,7 +152,21 @@ async function searchFile(filename, token) {
 
     const data = await res.json();
     if (data.files && data.files.length > 0) {
-        return data.files[0].id;
+        const latestFileId = data.files[0].id;
+        
+        // Delete older duplicates to keep only the latest backup file
+        if (data.files.length > 1) {
+            console.log(`Found ${data.files.length} backup files. Keeping the latest one and deleting older duplicates...`);
+            for (let i = 1; i < data.files.length; i++) {
+                try {
+                    await deleteFile(data.files[i].id, token);
+                } catch(e) {
+                    console.error("Failed to delete older duplicate file:", e);
+                }
+            }
+        }
+        
+        return latestFileId;
     }
     return null;
 }
@@ -162,4 +184,16 @@ async function downloadFile(fileId, token) {
     }
 
     return await res.json();
+}
+
+async function deleteFile(fileId, token) {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': 'Bearer ' + token
+        }
+    });
+    if (!res.ok) {
+        throw new Error("Delete failed: " + res.status);
+    }
 }
