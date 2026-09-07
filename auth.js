@@ -34,6 +34,13 @@ window.loginWithGoogle = () => {
   });
   
   auth.signInWithPopup(provider).then((result) => {
+    // Check strict email lock immediately
+    if (result.user && result.user.email !== 'softwarebackupj1@gmail.com') {
+      alert('Access Restricted: Only softwarebackupj1@gmail.com is allowed to sync data for this application.');
+      window.logout();
+      return;
+    }
+
     // In Firebase compat, the credential and token are directly on the result object
     const credential = result.credential;
     const token = credential ? credential.accessToken : null;
@@ -64,6 +71,8 @@ window.logout = () => {
     auth.signOut();
     window.googleDriveAccessToken = null;
     sessionStorage.removeItem('googleDriveAccessToken');
+    // Call update UI manually just in case
+    window.updateAuthUI(null);
   }
 };
 
@@ -98,9 +107,15 @@ window.updateAuthUI = (user) => {
 // Listen for auth state changes and update the UI
 if (auth) {
   auth.onAuthStateChanged((user) => {
+    // Strict email check for existing sessions
+    if (user && user.email !== 'softwarebackupj1@gmail.com') {
+      window.logout();
+      return;
+    }
+
     window.updateAuthUI(user);
     if (user) {
-      console.log("User logged in:", user.displayName);
+      console.log("User logged in:", user.email);
     } else {
       console.log("User logged out");
     }
