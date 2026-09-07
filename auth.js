@@ -35,6 +35,10 @@ window.loginWithGoogle = () => {
       window.googleDriveAccessToken = credential.accessToken;
       sessionStorage.setItem('googleDriveAccessToken', credential.accessToken);
       console.log("Google Drive Access Token obtained.");
+      
+      // Update UI immediately since onAuthStateChanged might not fire if user was already logged into Firebase
+      window.updateAuthUI(result.user);
+
       if (window.pullFromDrive) {
           window.pullFromDrive(); // attempt to pull data from drive on login
       }
@@ -53,38 +57,41 @@ window.logout = () => {
   }
 };
 
+window.updateAuthUI = (user) => {
+  const loginBtn = document.getElementById('login-btn');
+  if (!loginBtn) return;
+  
+  if (user) {
+    if (!window.googleDriveAccessToken) {
+        loginBtn.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px; color: #ffeb3b;">
+            <i class='bx bx-error'></i>
+            <span>Reconnect Drive</span>
+          </div>
+        `;
+        loginBtn.onclick = window.loginWithGoogle;
+    } else {
+        loginBtn.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <img src="${user.photoURL}" alt="Profile" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">
+            <span>Logout</span>
+          </div>
+        `;
+        loginBtn.onclick = window.logout;
+    }
+  } else {
+    loginBtn.innerHTML = `<i class='bx bxl-google'></i> <span data-i18n="btn_login">Login</span>`;
+    loginBtn.onclick = window.loginWithGoogle;
+  }
+};
+
 // Listen for auth state changes and update the UI
 if (auth) {
   auth.onAuthStateChanged((user) => {
-    const loginBtn = document.getElementById('login-btn');
+    window.updateAuthUI(user);
     if (user) {
-      // User is signed in
-      if (loginBtn) {
-        if (!window.googleDriveAccessToken) {
-            loginBtn.innerHTML = `
-              <div style="display: flex; align-items: center; gap: 8px; color: #ffeb3b;">
-                <i class='bx bx-error'></i>
-                <span>Reconnect Drive</span>
-              </div>
-            `;
-            loginBtn.onclick = window.loginWithGoogle;
-        } else {
-            loginBtn.innerHTML = `
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <img src="${user.photoURL}" alt="Profile" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover;">
-                <span>Logout</span>
-              </div>
-            `;
-            loginBtn.onclick = window.logout;
-        }
-      }
       console.log("User logged in:", user.displayName);
     } else {
-      // User is signed out
-      if (loginBtn) {
-        loginBtn.innerHTML = `<i class='bx bxl-google'></i> <span data-i18n="btn_login">Login</span>`;
-        loginBtn.onclick = window.loginWithGoogle;
-      }
       console.log("User logged out");
     }
   });
