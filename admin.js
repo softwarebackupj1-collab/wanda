@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = async (event) => {
                 try {
                     const data = JSON.parse(event.target.result);
                     if (confirm('Warning: This will overwrite your existing data. Are you sure you want to proceed?')) {
@@ -73,6 +73,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                 localStorage.setItem(key, data[key]);
                             }
                         }
+                        
+                        // Push restored data to Google Drive so it syncs to other devices
+                        if (window.syncToDrive) {
+                            await window.syncToDrive();
+                        }
+                        
                         alert('Data restored successfully! The page will now reload.');
                         location.reload();
                     }
