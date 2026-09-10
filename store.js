@@ -59,9 +59,19 @@ class Store {
         const persons = localStorage.getItem(StorageKey.PERSONS);
         let personsList = persons ? JSON.parse(persons) : [];
         
-        // Ensure all unique persons from transactions are included
         const txs = this.getTransactions();
-        const uniqueNames = [...new Set(txs.map(t => t.person).filter(p => p))];
+        
+        // Find the oldest transaction date for each person to sort them chronologically
+        const firstSeen = {};
+        for (let i = txs.length - 1; i >= 0; i--) {
+            const tx = txs[i];
+            if (tx.person && !firstSeen[tx.person.toLowerCase()]) {
+                firstSeen[tx.person.toLowerCase()] = new Date(tx.date).getTime();
+            }
+        }
+        
+        // Reverse txs so oldest are first when discovering unique names
+        const uniqueNames = [...new Set([...txs].reverse().map(t => t.person).filter(p => p))];
         
         let changed = false;
         uniqueNames.forEach(name => {
@@ -74,7 +84,21 @@ class Store {
             }
         });
 
-        // Save if we found new persons from transactions, or if there was no stored list
+        const originalOrder = personsList.map(p => p.id).join(',');
+
+        // Always ensure personsList is sorted chronologically
+        personsList.sort((a, b) => {
+            const timeA = firstSeen[a.name.toLowerCase()] || parseInt(a.id) || 0;
+            const timeB = firstSeen[b.name.toLowerCase()] || parseInt(b.id) || 0;
+            return timeA - timeB;
+        });
+
+        const newOrder = personsList.map(p => p.id).join(',');
+        if (originalOrder !== newOrder) {
+            changed = true;
+        }
+
+        // Save if we found new persons from transactions, or if order changed, or no stored list
         if (changed || !persons) {
             this.savePersons(personsList);
         }
