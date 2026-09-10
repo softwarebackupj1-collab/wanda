@@ -57,8 +57,12 @@ window.pullFromSupabase = async () => {
             }
             localStorage.setItem('supabase_last_sync', Date.now().toString());
 
-            alert("Data successfully synced from Supabase! The page will now reload.");
-            location.reload();
+            const today = new Date().toDateString();
+            if (localStorage.getItem('supabase_sync_alert_date') !== today) {
+                localStorage.setItem('supabase_sync_alert_date', today);
+                alert("Data successfully synced from Supabase! The page will now reload.");
+                location.reload();
+            }
         }
     } catch (error) {
         console.error("Failed to pull from Supabase:", error);
