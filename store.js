@@ -57,16 +57,29 @@ class Store {
 
     static getPersons() {
         const persons = localStorage.getItem(StorageKey.PERSONS);
-        if (persons) return JSON.parse(persons);
+        let personsList = persons ? JSON.parse(persons) : [];
         
+        // Ensure all unique persons from transactions are included
         const txs = this.getTransactions();
         const uniqueNames = [...new Set(txs.map(t => t.person).filter(p => p))];
-        const newPersonsList = uniqueNames.map((name, idx) => ({
-            id: Date.now().toString() + '-' + idx,
-            name: name
-        }));
-        this.savePersons(newPersonsList);
-        return newPersonsList;
+        
+        let changed = false;
+        uniqueNames.forEach(name => {
+            if (!personsList.find(p => p.name.toLowerCase() === name.toLowerCase())) {
+                personsList.push({
+                    id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
+                    name: name
+                });
+                changed = true;
+            }
+        });
+
+        // Save if we found new persons from transactions, or if there was no stored list
+        if (changed || !persons) {
+            this.savePersons(personsList);
+        }
+
+        return personsList;
     }
 
     static savePersons(persons) {
