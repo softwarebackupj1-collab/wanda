@@ -1,4 +1,12 @@
 // app.js
+window.debounce = function(func, timeout = 300) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => { func.apply(this, args); }, timeout);
+    };
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     // Theme Logic
     const themeToggleBtn = document.getElementById('theme-toggle');
@@ -78,22 +86,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const dashSearchItem = document.getElementById('stock-item');
     const dashSearchPerson = document.getElementById('person-name');
     if (dashSearchItem) {
-        dashSearchItem.addEventListener('input', (e) => {
+        dashSearchItem.addEventListener('input', window.debounce((e) => {
             if (e.target.value.trim().toLowerCase() === '/admin') {
                 window.location.href = 'admin.html';
                 return;
             }
             updateDashboard();
-        });
+        }, 300));
     }
     if (dashSearchPerson) {
-        dashSearchPerson.addEventListener('input', (e) => {
+        dashSearchPerson.addEventListener('input', window.debounce((e) => {
             if (e.target.value.trim().toLowerCase() === '/admin') {
                 window.location.href = 'admin.html';
                 return;
             }
             updateDashboard();
-        });
+        }, 300));
     }
 
     // Global Key Listener for "/admin" shortcut

@@ -395,10 +395,10 @@ let currentBalanceSearchQuery = '';
 document.addEventListener('DOMContentLoaded', () => {
     const balSearch = document.getElementById('admin-balance-search');
     if (balSearch) {
-        balSearch.addEventListener('input', (e) => {
+        balSearch.addEventListener('input', window.debounce((e) => {
             currentBalanceSearchQuery = e.target.value.toLowerCase();
             renderOutstandingBalances();
-        });
+        }, 300));
     }
 });
 
@@ -536,8 +536,8 @@ function renderOutstandingBalances() {
 document.addEventListener('DOMContentLoaded', () => {
     const paySearch = document.getElementById('admin-payable-search');
     if (paySearch) {
-        paySearch.addEventListener('input', () => {
+        paySearch.addEventListener('input', window.debounce(() => {
             renderOutstandingBalances();
-        });
+        }, 300));
     }
 });

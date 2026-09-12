@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Attach search event listener if on Admin Panel
     if (searchInput) {
-        searchInput.addEventListener('input', window.renderInvoicesTable);
+        searchInput.addEventListener('input', window.debounce(window.renderInvoicesTable, 300));
     }
 
     // Statement Download Logic
