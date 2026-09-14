@@ -98,9 +98,11 @@ class Store {
             changed = true;
         }
 
-        // Save if we found new persons from transactions, or if order changed, or no stored list
-        if (changed || !persons) {
+        // Save if we found new persons from transactions, or if order changed, or no stored list (and it has items)
+        if (changed || (!persons && personsList.length > 0)) {
             this.savePersons(personsList);
+        } else if (!persons) {
+            localStorage.setItem(StorageKey.PERSONS, JSON.stringify(personsList));
         }
 
         return personsList;
