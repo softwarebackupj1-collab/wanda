@@ -51,16 +51,20 @@ window.pullFromSupabase = async () => {
 
             console.log("Backup found! Downloading data...");
             
+            let dataChanged = false;
             // Overwrite local storage
             for (const key in remoteData) {
-                localStorage.setItem(key, remoteData[key]);
+                if (localStorage.getItem(key) !== remoteData[key]) {
+                    localStorage.setItem(key, remoteData[key]);
+                    dataChanged = true;
+                }
             }
+            
             localStorage.setItem('supabase_last_sync', Date.now().toString());
 
-            const today = new Date().toDateString();
-            if (localStorage.getItem('supabase_sync_alert_date') !== today) {
-                localStorage.setItem('supabase_sync_alert_date', today);
-                alert("Data successfully synced from Supabase! The page will now reload.");
+            if (dataChanged) {
+                // If this is the first time syncing on this device, we don't need to alert, just reload.
+                // But for safety and UX, we can just silently reload or alert. Let's just reload.
                 location.reload();
             }
         }
