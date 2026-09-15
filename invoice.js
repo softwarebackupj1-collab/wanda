@@ -145,7 +145,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const printTxId = urlParams.get('print');
     if (printTxId) {
         // Clear the URL to prevent re-printing on manual refresh
-        window.history.replaceState({}, document.title, window.location.pathname);
+        try {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (e) {
+            console.warn('Could not replace history state:', e);
+        }
         const lang = localStorage.getItem('lang') || 'en';
         // Delay slightly to ensure page and translations are fully loaded
         setTimeout(() => {
