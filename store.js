@@ -13,6 +13,7 @@ class Store {
 
     static saveItems(items) {
         localStorage.setItem(StorageKey.ITEMS, JSON.stringify(items));
+        localStorage.setItem('unsynced_changes', 'true');
         if (window.syncToSupabase) window.syncToSupabase();
     }
 
@@ -110,6 +111,7 @@ class Store {
 
     static savePersons(persons) {
         localStorage.setItem(StorageKey.PERSONS, JSON.stringify(persons));
+        localStorage.setItem('unsynced_changes', 'true');
         if (window.syncToSupabase) window.syncToSupabase();
     }
 
@@ -134,6 +136,7 @@ class Store {
 
     static saveTransactions(transactions) {
         localStorage.setItem(StorageKey.TRANSACTIONS, JSON.stringify(transactions));
+        localStorage.setItem('unsynced_changes', 'true');
         if (window.syncToSupabase) window.syncToSupabase();
     }
 

@@ -40,6 +40,8 @@ window.pullFromSupabase = async () => {
             // Since Supabase is real-time and we just connected, let's prompt if local data exists but hasn't been synced.
             
             const lastSync = localStorage.getItem('supabase_last_sync');
+            const hasUnsyncedChanges = localStorage.getItem('unsynced_changes') === 'true';
+
             if (hasLocalData && !lastSync) {
                 const pull = confirm("Supabase Backup Found!\n\nThis device also has some local data.\n\nClick 'OK' to DOWNLOAD from Supabase (this will replace your local data).\n\nClick 'Cancel' to UPLOAD your local data (this will replace the Supabase backup).");
                 if (!pull) {
@@ -47,6 +49,10 @@ window.pullFromSupabase = async () => {
                     window.syncToSupabase();
                     return;
                 }
+            } else if (hasUnsyncedChanges) {
+                console.log("Local unsynced changes detected. Pushing to Supabase instead of pulling.");
+                window.syncToSupabase();
+                return;
             }
 
             console.log("Backup found! Downloading data...");
@@ -99,6 +105,7 @@ window.syncToSupabase = async () => {
         if (error) throw error;
         
         localStorage.setItem('supabase_last_sync', Date.now().toString());
+        localStorage.removeItem('unsynced_changes');
         console.log("Successfully synced to Supabase!");
     } catch (error) {
         console.error("Failed to sync to Supabase:", error);
