@@ -31,6 +31,11 @@ class Store {
     static deleteItem(id) {
         let items = this.getItems();
         items = items.filter(item => item.id !== id);
+        let deleted = JSON.parse(localStorage.getItem('inventory_deleted_items') || '[]');
+        if (!deleted.includes(id)) {
+            deleted.push(id);
+            localStorage.setItem('inventory_deleted_items', JSON.stringify(deleted));
+        }
         this.saveItems(items);
     }
 
@@ -131,11 +136,14 @@ class Store {
 
     static getTransactions() {
         const txs = localStorage.getItem(StorageKey.TRANSACTIONS);
-        return txs ? JSON.parse(txs) : [];
+        const list = txs ? JSON.parse(txs) : [];
+        return list.sort((a, b) => new Date(b.date) - new Date(a.date));
     }
 
     static saveTransactions(transactions) {
-        localStorage.setItem(StorageKey.TRANSACTIONS, JSON.stringify(transactions));
+        // Keep transactions ordered by date descending
+        const sorted = (transactions || []).sort((a, b) => new Date(b.date) - new Date(a.date));
+        localStorage.setItem(StorageKey.TRANSACTIONS, JSON.stringify(sorted));
         localStorage.setItem('unsynced_changes', 'true');
         if (window.syncToSupabase) window.syncToSupabase();
     }
@@ -164,6 +172,13 @@ class Store {
     static deleteTransaction(id) {
         let txs = this.getTransactions();
         txs = txs.filter(tx => tx.id !== id);
+
+        let deleted = JSON.parse(localStorage.getItem('inventory_deleted_txs') || '[]');
+        if (!deleted.includes(id)) {
+            deleted.push(id);
+            localStorage.setItem('inventory_deleted_txs', JSON.stringify(deleted));
+        }
+
         this.saveTransactions(txs);
     }
 }

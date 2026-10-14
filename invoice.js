@@ -7,6 +7,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!tbody) return; // Prevent error if not on right page (though it's single page)
 
+        // Always sort transactions chronologically (newest first)
+        transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        // Filter by Date Search if entered
+        const dateInput = document.getElementById('admin-invoice-date-search');
+        if (dateInput && dateInput.value) {
+            const selectedDate = dateInput.value; // YYYY-MM-DD
+            transactions = transactions.filter(tx => {
+                if (!tx.date) return false;
+                const d = new Date(tx.date);
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                const localDateStr = `${year}-${month}-${day}`;
+                return localDateStr === selectedDate || tx.date.startsWith(selectedDate);
+            });
+        }
+
         // Filter by Admin Panel Search if it exists
         const searchInput = document.getElementById('admin-invoice-search');
         if (searchInput && searchInput.value) {
@@ -92,6 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Attach search event listener if on Admin Panel
     if (searchInput) {
         searchInput.addEventListener('input', window.debounce(window.renderInvoicesTable, 300));
+    }
+
+    const dateSearchInput = document.getElementById('admin-invoice-date-search');
+    if (dateSearchInput) {
+        dateSearchInput.addEventListener('change', window.renderInvoicesTable);
+        dateSearchInput.addEventListener('input', window.renderInvoicesTable);
     }
 
     // Statement Download Logic
