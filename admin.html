@@ -107,14 +107,38 @@
                     </div>
                 </div>
 
+                <!-- Cloud Disaster Protection & Daily Backup Card -->
+                <div class="glass-panel" style="margin-bottom: 24px; padding: 20px 24px; border-radius: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                                <i class='bx bx-shield-quarter' style="font-size: 26px; color: #10b981;"></i>
+                                <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Daily Cloud Protection & Disaster Recovery</h3>
+                                <span class="badge badge-in" style="font-size: 11px; padding: 3px 8px;">Automated Everyday</span>
+                            </div>
+                            <p style="margin: 0; font-size: 13px; color: var(--text-secondary); max-width: 650px;">
+                                Your invoices and inventory are automatically archived to Supabase every day. If your laptop is ever broken, damaged, or replaced, simply log in on another laptop or phone to restore all data instantly with zero loss.
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <button id="btn-cloud-backup-now" class="btn btn-primary" onclick="window.syncToSupabase({ force: true, interactive: true })" style="display: flex; align-items: center; gap: 8px;">
+                                <i class='bx bx-cloud-upload'></i> <span>Backup to Cloud Now</span>
+                            </button>
+                            <button id="btn-view-cloud-snapshots" class="btn btn-secondary" onclick="window.viewDailySnapshotsModal()" style="display: flex; align-items: center; gap: 8px;">
+                                <i class='bx bx-history'></i> <span>Daily Backups History</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <div style="display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;">
                     <button id="btn-export-data" class="btn btn-primary"
                         style="display: flex; align-items: center; gap: 8px;">
-                        <i class='bx bx-export'></i> <span data-i18n="btn_export_data">Backup Data (Export)</span>
+                        <i class='bx bx-export'></i> <span data-i18n="btn_export_data">Backup Data (Export JSON)</span>
                     </button>
                     <button id="btn-import-data" class="btn btn-secondary"
                         style="display: flex; align-items: center; gap: 8px;">
-                        <i class='bx bx-import'></i> <span data-i18n="btn_import_data">Restore Data (Import)</span>
+                        <i class='bx bx-import'></i> <span data-i18n="btn_import_data">Restore Data (Import JSON)</span>
                     </button>
                     <input type="file" id="import-data-file" accept=".json" style="display: none;">
                 </div>

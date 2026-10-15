@@ -1007,3 +1007,103 @@ body.light-theme .sync-device-tag:hover {
     color: #ffffff;
 }
 
+/* Daily Backup Confirmation Toast (Once-a-day popup) */
+.daily-backup-toast {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    max-width: 440px;
+    width: calc(100% - 48px);
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(16, 185, 129, 0.15);
+    z-index: 999999;
+    transform: translateY(-50px) scale(0.95);
+    opacity: 0;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+}
+
+.daily-backup-toast.show {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.daily-backup-toast .toast-icon {
+    font-size: 32px;
+    color: #10b981;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(16, 185, 129, 0.15);
+    padding: 8px;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.daily-backup-toast .toast-body {
+    flex: 1;
+}
+
+.daily-backup-toast .toast-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #34d399;
+    margin-bottom: 4px;
+}
+
+.daily-backup-toast .toast-desc {
+    font-size: 13px;
+    color: var(--text-primary);
+    line-height: 1.45;
+    margin-bottom: 6px;
+}
+
+.daily-backup-toast .toast-subtext {
+    font-size: 11px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.daily-backup-toast .toast-close-btn {
+    background: var(--success);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    align-self: center;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.daily-backup-toast .toast-close-btn:hover {
+    background: #059669;
+    transform: scale(1.05);
+}
+
+body.light-theme .daily-backup-toast {
+    background: rgba(255, 255, 255, 0.98);
+    border-color: rgba(16, 185, 129, 0.3);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+}
+body.light-theme .daily-backup-toast .toast-title {
+    color: #059669;
+}
+body.light-theme .daily-backup-toast .toast-desc {
+    color: #1e293b;
+}
+

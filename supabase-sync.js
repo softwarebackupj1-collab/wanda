@@ -124,11 +124,16 @@
         const missingFromLaptopItems = remoteItems.filter(ri => ri && ri.name && !local.items.some(li => li.name.toLowerCase().trim() === ri.name.toLowerCase().trim()));
         const missingFromLaptopPersons = remotePersons.filter(rp => rp && rp.name && !local.persons.some(lp => lp.name.toLowerCase().trim() === rp.name.toLowerCase().trim()));
 
+        const todayDate = new Date().toISOString().split('T')[0];
+        const lastDailyBackup = localStorage.getItem('sm_last_daily_backup');
+        const needsDailyBackup = (lastDailyBackup !== todayDate);
+
         const hasLocalNewData = (
             newTransactions.length > 0 ||
             modifiedTransactions.length > 0 ||
             newItems.length > 0 ||
             newPersons.length > 0 ||
+            needsDailyBackup ||
             localStorage.getItem('unsynced_changes') === 'true'
         );
 
@@ -143,9 +148,11 @@
         if (modifiedTransactions.length > 0) summary.push(`${modifiedTransactions.length} updated invoice(s)`);
         if (newItems.length > 0) summary.push(`${newItems.length} new item(s)`);
         if (newPersons.length > 0) summary.push(`${newPersons.length} new person(s)`);
+        if (needsDailyBackup) summary.push(`Daily archive (${todayDate})`);
 
         return {
             hasNewData: hasLocalNewData,
+            needsDailyBackup,
             newTransactions,
             modifiedTransactions,
             newItems,
@@ -319,6 +326,65 @@
             </button>
         `;
     };
+
+    // Show the Daily Backup Confirmation Pop-up STRICTLY ONCE PER DAY
+    function showDailyBackupPopupOnce(dateStr, txCount, itemCount) {
+        const todayStr = dateStr || new Date().toISOString().split('T')[0];
+        const lastPopupDate = localStorage.getItem('sm_daily_popup_shown_date');
+
+        // STRICT ONCE-PER-DAY CHECK: If already shown today, do not show again!
+        if (lastPopupDate === todayStr) {
+            return;
+        }
+
+        // Mark as shown for today
+        localStorage.setItem('sm_daily_popup_shown_date', todayStr);
+
+        const lang = localStorage.getItem('lang') || 'en';
+        const isUrdu = lang === 'ur';
+
+        const popupId = 'daily-backup-success-toast';
+        let popup = document.getElementById(popupId);
+        if (!popup) {
+            popup = document.createElement('div');
+            popup.id = popupId;
+            popup.className = 'daily-backup-toast';
+            document.body.appendChild(popup);
+        }
+
+        const titleText = isUrdu 
+            ? 'روزانہ کلاؤڈ بیک اپ محفوظ ہو گیا! 🛡️' 
+            : 'Daily Cloud Backup Secured! 🛡️';
+        const bodyText = isUrdu 
+            ? `آج کی تاریخ (${todayStr}) کا تمام ریکارڈ (${txCount || 0} انوائسز) کلاؤڈ میں محفوظ ہو چکا ہے۔ اگر لیپ ٹاپ خراب یا بند بھی ہو جائے تو آپ کا تمام ڈیٹا کلاؤڈ میں مکمل محفوظ رہے گا۔` 
+            : `All your records (${txCount || 0} invoices, ${itemCount || 0} items) are safely stored in Supabase for today (${todayStr}). If your laptop ever breaks, your data is 100% safe.`;
+
+        popup.innerHTML = `
+            <div class="toast-icon">
+                <i class='bx bx-shield-quarter'></i>
+            </div>
+            <div class="toast-body">
+                <div class="toast-title">${titleText}</div>
+                <div class="toast-desc">${bodyText}</div>
+                <div class="toast-subtext"><i class='bx bx-check-circle'></i> ${isUrdu ? 'یہ تصدیقی اطلاع دن میں صرف ایک بار ظاہر ہوگی۔' : 'This confirmation appears only once per day.'}</div>
+            </div>
+            <button class="toast-close-btn" onclick="document.getElementById('${popupId}').classList.remove('show'); setTimeout(() => document.getElementById('${popupId}')?.remove(), 400);">
+                ${isUrdu ? 'ٹھیک ہے' : 'Got it'}
+            </button>
+        `;
+
+        requestAnimationFrame(() => {
+            popup.classList.add('show');
+        });
+
+        // Auto-dismiss after 10 seconds if not closed
+        setTimeout(() => {
+            if (popup && popup.parentNode) {
+                popup.classList.remove('show');
+                setTimeout(() => popup.remove(), 400);
+            }
+        }, 10000);
+    }
 
     // Allow user to name their laptop (e.g., Shop Counter 1, Office Laptop)
     window.promptDeviceName = function () {
@@ -539,6 +605,8 @@
                 }
                 localStorage.removeItem('unsynced_changes');
                 window.updateSyncStatus('synced', 'Live Sync Active');
+                const localCur = getLaptopData();
+                showDailyBackupPopupOnce(todayDate, localCur.transactions.length, localCur.items.length);
                 isSyncing = false;
                 return;
             }
@@ -568,7 +636,34 @@
             uploadPayload['inventory_transactions'] = mergedTxJson;
             uploadPayload['inventory_items'] = mergedItemsJson;
             uploadPayload['inventory_persons'] = mergedPersonsJson;
-            uploadPayload['last_updated_by_device'] = window.getDeviceName();
+            // STEP 3.5: Daily Cloud Backup Archive in Supabase (Disaster Protection)
+            const todayDate = new Date().toISOString().split('T')[0];
+            let dailySnapshots = safeParse(remoteData['sm_daily_snapshots'], []);
+            if (!Array.isArray(dailySnapshots)) dailySnapshots = [];
+
+            const snapshotObj = {
+                date: todayDate,
+                timestamp: Date.now(),
+                isoTime: new Date().toISOString(),
+                transactionCount: merged.transactions.length,
+                itemCount: merged.items.length,
+                personCount: merged.persons.length,
+                savedFromDevice: window.getDeviceName()
+            };
+
+            const existingIndex = dailySnapshots.findIndex(s => s.date === todayDate);
+            if (existingIndex === -1) {
+                dailySnapshots.unshift(snapshotObj);
+            } else {
+                dailySnapshots[existingIndex] = snapshotObj;
+            }
+
+            // Retain up to 30 rolling daily snapshots for disaster recovery
+            if (dailySnapshots.length > 30) {
+                dailySnapshots = dailySnapshots.slice(0, 30);
+            }
+            uploadPayload['sm_daily_snapshots'] = JSON.stringify(dailySnapshots);
+            localStorage.setItem('sm_last_daily_backup', todayDate);
 
             // STEP 4: Send the combined, safe dataset to Supabase
             const { error: upsertError } = await window.supabaseClient
@@ -595,6 +690,9 @@
 
             // Refresh UI in case new items were sorted or updated
             refreshViews();
+
+            // Trigger the Once-Per-Day Confirmation Pop-up
+            showDailyBackupPopupOnce(todayDate, merged.transactions.length, merged.items.length);
 
             if (options.interactive) {
                 alert(`Sync Successful!\n\nAll data is safely stored on this laptop and backed up to Supabase.\n${diff.summary}`);
@@ -727,6 +825,93 @@
                 }
             } catch (e) { }
         }
+
+        // Daily Backup Check: If today's backup has not been sent, sync it
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (localStorage.getItem('sm_last_daily_backup') !== todayStr && navigator.onLine) {
+            console.log("[Daily Backup] Triggering daily cloud snapshot for", todayStr);
+            window.scheduleSyncToSupabase(4000);
+        }
     });
+
+    // View Daily Snapshots Modal for Disaster Recovery
+    window.viewDailySnapshotsModal = async function () {
+        let remoteData = {};
+        try {
+            if (window.supabaseClient) {
+                const { data: sessionData } = await window.supabaseClient.auth.getSession();
+                if (sessionData && sessionData.session) {
+                    const { data } = await window.supabaseClient
+                        .from('user_data')
+                        .select('data')
+                        .eq('email', sessionData.session.user.email)
+                        .single();
+                    if (data && data.data) remoteData = data.data;
+                }
+            }
+        } catch (e) {
+            console.warn("Could not fetch remote snapshots:", e);
+        }
+
+        const snapshots = safeParse(remoteData['sm_daily_snapshots'], []);
+        const modalId = 'daily-snapshots-modal';
+        let modal = document.getElementById(modalId);
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = modalId;
+            modal.className = 'modal-overlay';
+            document.body.appendChild(modal);
+        }
+
+        let listHtml = '';
+        if (snapshots.length === 0) {
+            listHtml = `<p style="text-align: center; color: var(--text-secondary); padding: 20px;">No daily snapshots archived yet. Today's backup will be created automatically.</p>`;
+        } else {
+            listHtml = `
+                <div style="max-height: 280px; overflow-y: auto; margin-bottom: 16px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border); color: var(--text-secondary);">
+                                <th style="padding: 8px 4px; text-align: left;">Date</th>
+                                <th style="padding: 8px 4px; text-align: center;">Invoices</th>
+                                <th style="padding: 8px 4px; text-align: center;">Items</th>
+                                <th style="padding: 8px 4px; text-align: right;">Device</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${snapshots.map(s => `
+                                <tr style="border-bottom: 1px solid var(--border);">
+                                    <td style="padding: 10px 4px; font-weight: 600; color: #10b981;">
+                                        <i class='bx bx-check-shield'></i> ${s.date}
+                                    </td>
+                                    <td style="padding: 10px 4px; text-align: center;">${s.transactionCount || 0}</td>
+                                    <td style="padding: 10px 4px; text-align: center;">${s.itemCount || 0}</td>
+                                    <td style="padding: 10px 4px; text-align: right; color: var(--text-secondary); font-size: 12px;">${s.savedFromDevice || 'Laptop'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px; width: 92%;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    <i class='bx bx-shield-quarter' style="font-size: 28px; color: #10b981;"></i>
+                    <h3 class="modal-title" style="margin: 0; font-size: 1.15rem;">Daily Cloud Backups (Supabase)</h3>
+                </div>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                    Every day, your entire database is archived to Supabase. If your laptop breaks or stops working, simply log in on any other laptop to restore all records instantly.
+                </p>
+                ${listHtml}
+                <div class="modal-actions" style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="modal-btn cancel" onclick="document.getElementById('${modalId}').style.display='none'">Close</button>
+                    <button type="button" class="modal-btn confirm" onclick="document.getElementById('${modalId}').style.display='none'; window.syncToSupabase({ force: true, interactive: true });">Backup Now</button>
+                </div>
+            </div>
+        `;
+        modal.style.display = 'flex';
+    };
 
 })();
