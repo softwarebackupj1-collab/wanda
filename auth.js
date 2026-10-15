@@ -48,6 +48,10 @@ if (window.supabaseClient) {
       window.updateAuthUI(user);
       console.log("User logged in:", user.email);
 
+      if (window.setupRealtimeSync) {
+        window.setupRealtimeSync(user.email);
+      }
+
       if (window.pullFromSupabase && !window.hasPulledFromSupabase) {
         window.hasPulledFromSupabase = true;
         window.pullFromSupabase();
@@ -56,8 +60,10 @@ if (window.supabaseClient) {
       window.hasPulledFromSupabase = false;
       window.updateAuthUI(null);
       console.log("User logged out");
-      // Force redirect to login page if they are not logged in and not already on the login page
-      if (!window.location.pathname.endsWith('login.html')) {
+      // Force redirect to login page if they are not logged in and not already on the login page (Vercel cleanUrls compatible)
+      const path = (window.location.pathname || '').toLowerCase();
+      const isLoginPage = path.endsWith('login.html') || path.endsWith('/login') || path === '/login';
+      if (!isLoginPage) {
         window.location.href = 'login.html';
       }
     }

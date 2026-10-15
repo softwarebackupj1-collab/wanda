@@ -97,7 +97,12 @@ const translations = {
         "print_record": "Stock Record",
         "print_paid": "Paid:",
         "print_rem": "Remaining:",
-        "print_footer": "Thank you for your business!"
+        "print_footer": "Thank you for your business!",
+        "sync_synced": "Synced to Cloud",
+        "sync_local_saved": "Saved on Laptop",
+        "sync_syncing": "Syncing to Cloud...",
+        "sync_offline": "Offline (Saved on Laptop)",
+        "sync_now": "Sync Now"
     },
     ur: {
         "app_title": "اسٹاک ماسٹر",
@@ -197,7 +202,12 @@ const translations = {
         "print_record": "اسٹاک ریکارڈ",
         "print_paid": "ادا شدہ:",
         "print_rem": "بقایا:",
-        "print_footer": "آپ کے کاروبار کا شکریہ!"
+        "print_footer": "آپ کے کاروبار کا شکریہ!",
+        "sync_synced": "کلاؤڈ سے سنک شدہ",
+        "sync_local_saved": "لیپ ٹاپ میں محفوظ",
+        "sync_syncing": "کلاؤڈ پر بھیجا جا رہا ہے...",
+        "sync_offline": "آف لائن (لیپ ٹاپ محفوظ)",
+        "sync_now": "ابھی سنک کریں"
     }
 };
 

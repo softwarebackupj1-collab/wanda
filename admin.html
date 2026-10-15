@@ -20,7 +20,8 @@
                     style="display: flex; align-items: center; gap: 8px;">
                     <i class='bx bx-arrow-back'></i> <span data-i18n="nav_dashboard">Dashboard</span>
                 </button>
-                <div style="margin-left: auto; display: flex; gap: 10px;">
+                <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+                    <div id="sync-status-indicator" class="sync-status-pill sync-synced"></div>
                     <button onclick="window.location.href='invoices.html'" class="btn btn-secondary"
                         style="display: flex; align-items: center; gap: 8px;">
                         <i class='bx bx-receipt'></i> <span data-i18n="nav_invoices">Invoices</span>
@@ -246,7 +247,7 @@
     </div>
 
     <!-- Scripts -->
-    <script src="translations.js?v=6" defer></script>
+    <script src="translations.js?v=7" defer></script>
     <script>
         // Provide mock functions for app.js so it doesn't crash on this page
         window.populateStockItemSelect = () => { };
@@ -254,16 +255,16 @@
         window.updateDashboard = () => { };
         window.populateDashboardDatalists = () => { };
     </script>
-    <script src="store.js?v=6" defer></script>
-    <script src="app.js?v=6" defer></script>
-    <script src="stock.js?v=6" defer></script>
+    <script src="store.js?v=7" defer></script>
+    <script src="app.js?v=7" defer></script>
+    <script src="stock.js?v=7" defer></script>
     <!-- Included for Store access (assuming Store is in stock.js or invoice.js) -->
-    <script src="invoice.js?v=6" defer></script>
-    <script src="admin.js?v=6" defer></script>
+    <script src="invoice.js?v=7" defer></script>
+    <script src="admin.js?v=7" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="supabase-config.js" defer></script>
-    <script src="auth.js?v=6" defer></script>
-    <script src="supabase-sync.js?v=6" defer></script>
+    <script src="auth.js?v=7" defer></script>
+    <script src="supabase-sync.js?v=7" defer></script>
 
 </body>
 

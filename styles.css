@@ -851,3 +851,159 @@ body.light-theme .stock-display-box {
     }
 }
 
+/* ==========================================================================
+   Sync Status Pill & Indicator (Local-First Sync Engine)
+   ========================================================================== */
+.sync-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(21, 27, 43, 0.85);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+.sync-status-pill:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+.sync-status-pill i {
+    font-size: 16px;
+}
+
+/* Synced State */
+.sync-status-pill.sync-synced {
+    border-color: rgba(16, 185, 129, 0.35);
+    color: #34d399;
+}
+.sync-status-pill.sync-synced:hover {
+    background: rgba(16, 185, 129, 0.12);
+}
+.sync-icon-synced {
+    color: #10b981;
+}
+
+/* Local Saved (Pending upload) */
+.sync-status-pill.sync-local_saved {
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #fbbf24;
+    background: rgba(245, 158, 11, 0.1);
+}
+.sync-status-pill.sync-local_saved:hover {
+    background: rgba(245, 158, 11, 0.18);
+}
+.sync-icon-local {
+    color: #f59e0b;
+    animation: pulseLaptop 1.8s infinite;
+}
+
+@keyframes pulseLaptop {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+/* Syncing State */
+.sync-status-pill.sync-syncing {
+    border-color: rgba(14, 165, 233, 0.4);
+    color: #38bdf8;
+    background: rgba(14, 165, 233, 0.1);
+}
+.sync-icon-syncing {
+    color: #0ea5e9;
+}
+
+/* Offline State */
+.sync-status-pill.sync-offline {
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.08);
+}
+.sync-icon-offline {
+    color: #ef4444;
+}
+
+/* Sync Now Button */
+.sync-now-btn {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px;
+    margin-left: 2px;
+    border-radius: 50%;
+    transition: transform 0.3s ease, background-color 0.2s ease;
+    opacity: 0.8;
+}
+
+.sync-now-btn:hover {
+    opacity: 1;
+    transform: rotate(180deg);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Light Theme Adjustments */
+body.light-theme .sync-status-pill {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+}
+body.light-theme .sync-status-pill.sync-synced {
+    color: #059669;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+body.light-theme .sync-status-pill.sync-local_saved {
+    color: #d97706;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+body.light-theme .sync-status-pill.sync-syncing {
+    color: #0284c7;
+    border-color: rgba(14, 165, 233, 0.3);
+}
+body.light-theme .sync-status-pill.sync-offline {
+    color: #dc2626;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Device Tag Badge */
+.sync-device-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 0 4px;
+}
+
+.sync-device-tag:hover {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+}
+
+body.light-theme .sync-device-tag {
+    background: rgba(0, 0, 0, 0.06);
+    color: #475569;
+    border-color: rgba(0, 0, 0, 0.08);
+}
+body.light-theme .sync-device-tag:hover {
+    background: var(--accent);
+    color: #ffffff;
+}
+
